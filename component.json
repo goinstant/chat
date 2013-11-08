@@ -1,0 +1,37 @@
+{
+  "name": "chat",
+  "repo": "goinstant/chat",
+  "description": "The GoInstant Chat widget provides real-time chat to users inside a room of your application.",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "lodash/lodash": "*",
+    "stagas/binder": "*",
+    "component/classes": "*",
+    "component/trim": "*",
+    "caolan/async": "*",
+    "goinstant/usercache": "*",
+    "goinstant/colors-common": "*"
+  },
+  "development": {
+    "visionmedia/mocha": "*",
+    "component/jquery": "*"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": [
+    "index.js",
+    "lib/errors.js"
+  ],
+  "templates": [
+    "templates/list-template.html",
+    "templates/message-template.html"
+  ],
+  "styles": [
+    "chat.css"
+  ],
+  "images": [
+    "images/collapse-arrow.png",
+    "images/avatar-blank.png"
+  ]
+}
