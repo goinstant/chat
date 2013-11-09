@@ -9201,6 +9201,8 @@ var LOCAL_MESSAGE_CLASS = 'gi-local-message';
 var MESSAGE_LIST_CLASS = 'gi-message-list';
 var MESSAGE_INPUT_CLASS = 'gi-message-input';
 var MESSAGE_BTN_CLASS = 'gi-message-btn';
+var MESSAGE_AVATAR_COLOR_CLASS = 'gi-color';
+var MESSAGE_DISPLAY_NAME_CLASS = 'gi-name';
 var OVERRIDE_CLASS = 'gi-override';
 var COLLAPSE_BTN_CLASS = 'gi-collapse';
 var ANCHOR_CLASS = 'gi-anchor';
@@ -9219,8 +9221,9 @@ var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
 
 var VALID_POSITIONS = ['left', 'right'];
 
-var DISPLAYNAME_REGEX = /\/displayName$/;
-var AVATARURL_REGEX = /\/avatarUrl$/;
+var DISPLAY_NAME_REGEX = /\/displayName$/;
+var AVATAR_URL_REGEX = /\/avatarUrl$/;
+var MESSAGE_KEY_REGEX = /^\/messages\/\d+_\d+$/;
 
 var defaultOpts = {
   room: null,
@@ -9286,6 +9289,7 @@ module.exports = Chat;
 
   _.bindAll(this, [
     '_handleCollapseToggle',
+    '_handleUserChange',
     '_getMessages',
     '_sendMessage'
   ]);
@@ -9319,6 +9323,9 @@ Chat.prototype.initialize = function(cb) {
 
     // Bind click event to collapse toggle.
     Binder.on(self._collapseBtn, 'click', self._handleCollapseToggle);
+
+    // Listen for userCache events.
+    self._userCache.on('change', self._handleUserChange);
 
     self._isBound = true;
 
@@ -9440,7 +9447,7 @@ Chat.prototype._getMessages = function(cb) {
   this._messagesKey.on('set', {bubble:true, listener:function(value, context) {
 
     // Only accept message keys: /messages/integer_integer
-    if (/^\/messages\/\d+_\d+$/.test(context.key)) {
+    if (MESSAGE_KEY_REGEX.test(context.key)) {
       self._addMessage(value);
     }
   }});
@@ -9449,12 +9456,11 @@ Chat.prototype._getMessages = function(cb) {
 Chat.prototype._addMessage = function(message) {
 
   var vars = {
-    shortName: truncate(message.user.displayName, this._truncateLength),
     id: message.id,
-    avatarColor: colors.get(message.user),
-    loaded: false,
-    avatarUrl: message.user.avatarUrl,
-    text: message.text
+    text: message.text,
+    shortName: truncate(message.user.displayName, this._truncateLength),
+    avatarColor: message.user.avatarColor,
+    avatarUrl: message.user.avatarUrl
   };
 
   var template = _.template(messageTemplate, vars);
@@ -9465,6 +9471,7 @@ Chat.prototype._addMessage = function(message) {
   entry.id = message.id;
   entry.setAttribute('data-goinstant-id', message.id);
 
+  classes(entry).add(message.user.id);
   classes(entry).add(MESSAGE_CLASS);
 
   var localUser = this._userCache.getLocalUser();
@@ -9475,6 +9482,28 @@ Chat.prototype._addMessage = function(message) {
   this._messageList.appendChild(entry);
 
   this._messageList.scrollTop = this._messageList.scrollHeight;
+};
+
+Chat.prototype._handleUserChange = function(user, keyName) {
+
+  // If user property affects chat
+  if (DISPLAY_NAME_REGEX.test(keyName) ||
+      AVATAR_URL_REGEX.test(keyName) ||
+      colors.isUserProperty(keyName)) {
+
+    var els = document.getElementsByClassName(user.id);
+    for (var i in els) {
+
+      if (els[i].nodeType === document.ELEMENT_NODE) {
+        els[i].getElementsByClassName(MESSAGE_DISPLAY_NAME_CLASS)[0].innerText = user.displayName;
+        els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundColor = user.avatarColor;
+
+        if (user.avatarUrl) {
+          els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundImage = 'url("'+user.avatarUrl+'")';
+        }
+      }
+    }
+  }
 };
 
 function truncate(str, limit) {
@@ -9559,10 +9588,10 @@ errors.create = function(method, type) {
 
 
 require.register("chat/templates/list-template.html", function(exports, require, module){
-module.exports = '<div class="gi-chat-wrapper">\n  <div class="gi-message-list"></div>\n  <input class="gi-message-input" type="text"/>\n  <button class="gi-message-btn">Send</button>\n</div>\n<div class="gi-collapse"><span></span></div>\n';
+module.exports = '<div class="gi-chat-wrapper">\n  <div class="gi-message-list"></div>\n  <div class="gi-message-form clearfix">\n    <input class="gi-message-input" type="text"/>\n    <button class="gi-message-btn">Send</button>\n  </div>\n</div>\n<div class="gi-collapse"><span></span></div>\n';
 });
 require.register("chat/templates/message-template.html", function(exports, require, module){
-module.exports = '<div class="gi-color" style="background-color: <%- avatarColor %>;">\n <div class="gi-avatar">\n    <% if (loaded) { %>\n      <img class="gi-avatar-img" src="<%- avatarUrl %>">\n    <% } %>\n  </div>\n</div>\n<div class="gi-name">\n  <span><%- shortName %></span>\n</div>\n<div class="gi-text">\n  <span><%- text %></span>\n</div>\n';
+module.exports = '<div class="gi-color" style="background-color: <%- avatarColor %>;\n  <% if (avatarUrl) { %> background-image:url(\'<%- avatarUrl %>\'); <% } %>">\n</div>\n<div class="gi-name">\n  <%- shortName %>\n</div>\n<div class="gi-text">\n  <%- text %>\n</div>\n';
 });
 require.alias("lodash-lodash/index.js", "chat/deps/lodash/index.js");
 require.alias("lodash-lodash/dist/lodash.compat.js", "chat/deps/lodash/dist/lodash.compat.js");

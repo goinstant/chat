@@ -23,7 +23,7 @@ html[xmlns] .clearfix {
 .gi-chat {
   position: relative;
   display: block;
-  max-width: 170px;
+  width: 270px;
   font-family: sans-serif;
   font-size: 14px;
   background: #a6a6a6;
@@ -37,9 +37,10 @@ html[xmlns] .clearfix {
 }
 
 /* Anchored */
-.gi-anchor {
+.gi-chat.gi-anchor {
   position: fixed;
-  top: 25%;
+  top: auto;
+  bottom: -4px;
 }
 
 .gi-relative {
@@ -49,14 +50,14 @@ html[xmlns] .clearfix {
 
 /* Right Aligned */
 .gi-chat.gi-right {
-  padding: 3px 0 3px 3px;
+  padding: 3px 3px 0;
   right: 0;
 }
 
 /* Left Aligned */
 .gi-chat.gi-left {
-  padding: 3px 3px 3px 0;
-  left: 0;
+  padding: 3px 3px 0;
+  right: 16px;
 }
 
 /* Message List */
@@ -65,7 +66,7 @@ html[xmlns] .clearfix {
   margin: 0;
   padding: 0;
   background: #f5f5f5;
-  height: 300px;
+  height: 250px;
   overflow-x: hidden;
   overflow-y: scroll;
 }
@@ -81,56 +82,35 @@ html[xmlns] .clearfix {
   background-position: 3px center;
 }
 
-  /* Transparent Avatar Border */
-  .gi-chat .gi-color:before {
-    display:block;
-    content:'';
-    position:absolute;
-    width:100%;
-    height:100%;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
-  }
-
-.gi-chat .gi-avatar {
-  overflow: hidden;
-  width: 24px;
-  height: 20px;
-}
-
-.gi-chat .gi-avatar .gi-avatar-img {
-  background: #f5f5f5;
-  width: 24px;
-  height: 24px;
-
-  vertical-align: top; /* Overrides breaking style in bootstrap */
+/* Transparent Avatar Border */
+.gi-chat .gi-color:before {
+  display:block;
+  content:'';
+  position:absolute;
+  width:100%;
+  height:100%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
 }
 
 .gi-chat .gi-name {
   display: inline-block;
   overflow: hidden;
-  width: 80px;
+  width: 180px;
   padding: 0 10px;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 2em;
   margin-right: 20px;
-}
-
-.gi-chat .gi-name span {
-  white-space: nowrap;
+  color: #444;
+  font-weight: 600;
 }
 
 .gi-chat .gi-text {
-  display: inline-block;
-  overflow: hidden;
-  width: 80px;
-  padding: 0 10px;
-  font-size: 13px;
-  line-height: 2em;
+  display: block;
+  width: auto;
+  padding: 0 0 10px 34px;
+  font-size: 12px;
+  line-height: 1.25;
   margin-right: 20px;
-}
-
-.gi-chat .gi-text span {
-  white-space: nowrap;
 }
 
 .gi-chat ul {
@@ -138,7 +118,6 @@ html[xmlns] .clearfix {
 }
 
 .gi-chat li {
-  height: 48px;
   margin: 0;
   overflow: hidden;
   padding: 4px 5px;
@@ -146,6 +125,62 @@ html[xmlns] .clearfix {
   border-bottom: 1px solid #cbcbcb;
   list-style: none;
 }
+
+.gi-chat .gi-message-form {
+  padding: 6px 2px 0;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+.gi-chat .gi-message-form input {
+  display: block;
+  float: left;
+  width: 203px;
+  height: 27px;
+  margin: -1px 0 0;
+  padding: 5px;
+  font-size: 12px;
+  font-family: sans-serif;
+  border: 1px solid #aaa;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+  .gi-chat .gi-message-form input:focus {
+    border-color: #777;
+    outline: none;
+  }
+  
+
+.gi-chat .gi-message-form button {
+  display: block;
+  float: left;
+  width: 62px;
+  height: 25px;
+  padding: 5px;
+  margin: 0;
+  border: 1px solid #ddd;
+  background: #ddd;
+  font-family: sans-serif;
+  text-transform: uppercase;
+  font-weight: normal;
+  color: #666;
+  cursor: pointer;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-appearance: none;
+}
+
+.gi-chat .gi-message-form button:hover {
+  background: #fff;
+  border-color: #fff;
+}
+
+.gi-chat .gi-message-form button:active {
+  background: #ddd;
+  outline: none;
+}
+
 
 /* Local user styling */
 .gi-chat li.gi-local-user {
@@ -165,12 +200,13 @@ html[xmlns] .clearfix {
 
 /* Collapse Toggle */
 .gi-chat .gi-collapse {
-  bottom: -30px;
+  top: -27px;
+  left: 0;
   display: block;
   height: 27px;
   position: absolute;
-  width: 34px;
-  background: #cbcbcb;
+  width: 276px;
+  background: #a6a6a6;
   border-bottom: 3px solid #a6a6a6;
   cursor: pointer;
 }
@@ -179,22 +215,13 @@ html[xmlns] .clearfix {
   display: none;
 }
 
-.gi-chat.gi-right .gi-collapse {
-  right: 0;
-  border-left: 3px solid #a6a6a6;
-}
-
-.gi-chat.gi-left .gi-collapse {
-  left: 0;
-  border-right: 3px solid #a6a6a6;
-}
-
 .gi-chat .gi-collapse span {
   display: block;
-  height: 16px;
-  margin: 5px 10px;
-  width: 11px;
-  background-image: url("chat/./images/collapse-arrow.png");
+  float: right;
+  height: 12px;
+  margin: 9px 10px;
+  width: 17px;
+  background-image: url("chat/./images/collapse-arrow-vertical.png");
 }
 
 .gi-chat-wrapper.collapsed {
@@ -202,15 +229,15 @@ html[xmlns] .clearfix {
 }
 
 .gi-chat.gi-left .gi-collapse span {
-  background-position: 11px;
+  background-position: 0 0;
 }
 
 .gi-chat.gi-left .gi-collapse.collapsed span {
-  background-position: 0px;
+  background-position: 0 -20px;
 }
 
 .gi-chat.gi-right .gi-collapse span {
-  background-position: 0px;
+  background-position: 0 0;
 }
 
 .gi-chat.gi-right .gi-collapse.collapsed span {
