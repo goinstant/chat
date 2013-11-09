@@ -51,8 +51,9 @@ var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
 
 var VALID_POSITIONS = ['left', 'right'];
 
-var DISPLAYNAME_REGEX = /\/displayName$/;
-var AVATARURL_REGEX = /\/avatarUrl$/;
+var DISPLAY_NAME_REGEX = /\/displayName$/;
+var AVATAR_URL_REGEX = /\/avatarUrl$/;
+var MESSAGE_KEY_REGEX = /^\/messages\/\d+_\d+$/;
 
 var defaultOpts = {
   room: null,
@@ -272,7 +273,7 @@ Chat.prototype._getMessages = function(cb) {
   this._messagesKey.on('set', {bubble:true, listener:function(value, context) {
 
     // Only accept message keys: /messages/integer_integer
-    if (/^\/messages\/\d+_\d+$/.test(context.key)) {
+    if (MESSAGE_KEY_REGEX.test(context.key)) {
       self._addMessage(value);
     }
   }});
@@ -281,12 +282,11 @@ Chat.prototype._getMessages = function(cb) {
 Chat.prototype._addMessage = function(message) {
 
   var vars = {
-    shortName: truncate(message.user.displayName, this._truncateLength),
     id: message.id,
-    avatarColor: colors.get(message.user),
-    loaded: false,
-    avatarUrl: message.user.avatarUrl,
-    text: message.text
+    text: message.text,
+    shortName: truncate(message.user.displayName, this._truncateLength),
+    avatarColor: message.user.avatarColor,
+    avatarUrl: message.user.avatarUrl
   };
 
   var template = _.template(messageTemplate, vars);
@@ -297,6 +297,7 @@ Chat.prototype._addMessage = function(message) {
   entry.id = message.id;
   entry.setAttribute('data-goinstant-id', message.id);
 
+  classes(entry).add(message.user.id);
   classes(entry).add(MESSAGE_CLASS);
 
   var localUser = this._userCache.getLocalUser();

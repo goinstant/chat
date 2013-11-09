@@ -1,12 +1,8 @@
-<div class="gi-color" style="background-color: <%- avatarColor %>;">
- <div class="gi-avatar">
-    <% if (loaded) { %>
-      <img class="gi-avatar-img" src="<%- avatarUrl %>">
-    <% } %>
-  </div>
+<div class="gi-color" style="background-color: <%- avatarColor %>;
+  <% if (avatarUrl) { %> background-image:url('<%- avatarUrl %>'); <% } %>">
 </div>
 <div class="gi-name">
-  <span><%- shortName %></span>
+  <%- shortName %>
 </div>
 <div class="gi-text">
   <%- text %>
