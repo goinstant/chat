@@ -202,7 +202,7 @@ module.exports = require('./dist/lodash.compat.js');
 require.register("lodash-lodash/dist/lodash.compat.js", function(exports, require, module){
 /**
  * @license
- * Lo-Dash 2.2.1 (Custom Build) <http://lodash.com/>
+ * Lo-Dash 2.3.0 (Custom Build) <http://lodash.com/>
  * Build: `lodash -o ./dist/lodash.compat.js`
  * Copyright 2012-2013 The Dojo Foundation <http://dojofoundation.org/>
  * Based on Underscore.js 1.5.2 <http://underscorejs.org/LICENSE>
@@ -260,7 +260,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
   var reFlags = /\w*$/;
 
   /** Used to detected named functions */
-  var reFuncName = /^function[ \n\r\t]+\w/;
+  var reFuncName = /^\s*function[ \n\r\t]+\w/;
 
   /** Used to match "interpolate" template delimiters */
   var reInterpolate = /<%=([\s\S]+?)%>/g;
@@ -1403,20 +1403,18 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
       function bound() {
         var thisBinding = isBind ? thisArg : this;
-        if (isCurry || partialArgs || partialRightArgs) {
-          if (partialArgs) {
-            var args = partialArgs.slice();
-            push.apply(args, arguments);
+        if (partialArgs) {
+          var args = partialArgs.slice();
+          push.apply(args, arguments);
+        }
+        if (partialRightArgs || isCurry) {
+          args || (args = slice(arguments));
+          if (partialRightArgs) {
+            push.apply(args, partialRightArgs);
           }
-          if (partialRightArgs || isCurry) {
-            args || (args = slice(arguments));
-            if (partialRightArgs) {
-              push.apply(args, partialRightArgs);
-            }
-            if (isCurry && args.length < arity) {
-              bitmask |= 16 & ~32;
-              return baseCreateWrapper([func, (isCurryBound ? bitmask : bitmask & ~3), args, null, thisArg, arity]);
-            }
+          if (isCurry && args.length < arity) {
+            bitmask |= 16 & ~32;
+            return baseCreateWrapper([func, (isCurryBound ? bitmask : bitmask & ~3), args, null, thisArg, arity]);
           }
         }
         args || (args = arguments);
@@ -4380,7 +4378,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 3
      *
      * _.size('pebbles');
-     * // => 5
+     * // => 7
      */
     function size(collection) {
       var length = collection ? collection.length : 0;
@@ -7056,7 +7054,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @memberOf _
      * @type string
      */
-    lodash.VERSION = '2.2.1';
+    lodash.VERSION = '2.3.0';
 
     // add "Chaining" functions to the wrapper
     lodash.prototype.chain = wrapperChain;
@@ -7126,12 +7124,6 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
   // some AMD build optimizers like r.js check for condition patterns like the following:
   if (typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
-    // Expose Lo-Dash to the global object even when an AMD loader is present in
-    // case Lo-Dash was injected by a third-party script and not intended to be
-    // loaded as a module. The global assignment can be reverted in the Lo-Dash
-    // module by its `noConflict()` method.
-    root._ = _;
-
     // define as an anonymous module so, through path mapping, it can be
     // referenced as the "underscore" module
     define(function() {
@@ -7157,6 +7149,9 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
 
 });
 require.register("component-event/index.js", function(exports, require, module){
+var bind = (window.addEventListener !== undefined) ? 'addEventListener' : 'attachEvent',
+    unbind = (window.removeEventListener !== undefined) ? 'removeEventListener' : 'detachEvent',
+    prefix = (bind !== 'addEventListener') ? 'on' : '';
 
 /**
  * Bind `el` event `type` to `fn`.
@@ -7170,11 +7165,8 @@ require.register("component-event/index.js", function(exports, require, module){
  */
 
 exports.bind = function(el, type, fn, capture){
-  if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
-  } else {
-    el.attachEvent('on' + type, fn);
-  }
+  el[bind](prefix + type, fn, capture || false);
+
   return fn;
 };
 
@@ -7190,14 +7182,10 @@ exports.bind = function(el, type, fn, capture){
  */
 
 exports.unbind = function(el, type, fn, capture){
-  if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
-  } else {
-    el.detachEvent('on' + type, fn);
-  }
+  el[unbind](prefix + type, fn, capture || false);
+
   return fn;
 };
-
 });
 require.register("component-query/index.js", function(exports, require, module){
 function one(selector, el) {
@@ -9201,8 +9189,6 @@ var LOCAL_MESSAGE_CLASS = 'gi-local-message';
 var MESSAGE_LIST_CLASS = 'gi-message-list';
 var MESSAGE_INPUT_CLASS = 'gi-message-input';
 var MESSAGE_BTN_CLASS = 'gi-message-btn';
-var MESSAGE_AVATAR_COLOR_CLASS = 'gi-color';
-var MESSAGE_DISPLAY_NAME_CLASS = 'gi-name';
 var OVERRIDE_CLASS = 'gi-override';
 var COLLAPSE_BTN_CLASS = 'gi-collapse';
 var ANCHOR_CLASS = 'gi-anchor';
@@ -9289,9 +9275,8 @@ module.exports = Chat;
 
   _.bindAll(this, [
     '_handleCollapseToggle',
-    '_handleUserChange',
     '_getMessages',
-    '_sendMessage'
+    '_handleNewMessage'
   ]);
 }
 
@@ -9324,9 +9309,6 @@ Chat.prototype.initialize = function(cb) {
     // Bind click event to collapse toggle.
     Binder.on(self._collapseBtn, 'click', self._handleCollapseToggle);
 
-    // Listen for userCache events.
-    self._userCache.on('change', self._handleUserChange);
-
     self._isBound = true;
 
     return cb(null, self);
@@ -9344,8 +9326,8 @@ Chat.prototype._append = function() {
   this._messageInput = this._wrapper.querySelector('.' + MESSAGE_INPUT_CLASS);
   this._messageBtn = this._wrapper.querySelector('.' + MESSAGE_BTN_CLASS);
 
-  Binder.on(this._messageInput, 'keydown', this._sendMessage);
-  Binder.on(this._messageBtn, 'click', this._sendMessage);
+  Binder.on(this._messageInput, 'keydown', this._handleNewMessage);
+  Binder.on(this._messageBtn, 'click', this._handleNewMessage);
 
   // Check if user passed a container and if so, append user list to it
   if (this._container) {
@@ -9392,7 +9374,33 @@ Chat.prototype._collapse = function(toggle) {
   }
 };
 
-Chat.prototype._sendMessage = function(event) {
+function generateMessageId() {
+  return new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
+}
+
+Chat.prototype.sendMessage = function(text, cb) {
+
+  var message = {};
+
+  message.text = _.escape(text);
+  message.id = generateMessageId();
+  message.user = this._userCache.getLocalUser();
+
+  var self = this;
+
+  this._messagesKey.key(message.id).set(message, function(err, value, context) {
+    if (err) {
+      return cb(err);
+    }
+
+    self._addMessage(message);
+    self._messageInput.value = '';
+
+    cb(null);
+  });
+};
+
+Chat.prototype._handleNewMessage = function(event) {
   // Only accept these
   var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
   var isValidClick = event.type === 'click';
@@ -9402,26 +9410,14 @@ Chat.prototype._sendMessage = function(event) {
     return;
   }
 
-  var message = {};
-
-  message.text = _.escape(this._messageInput.value);
-
-  if (message.text  === '') {
+  if (this._messageInput.value  === '') {
     return;
   }
 
-  message.id = new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
-  message.user = this._userCache.getLocalUser();
-
-  var self = this;
-
-  this._messagesKey.key(message.id).set(message, function(err, value, context) {
+  this.sendMessage(this._messageInput.value, function(err) {
     if (err) {
       return;
     }
-
-    self._addMessage(message);
-    self._messageInput.value = '';
   });
 };
 
@@ -9430,8 +9426,9 @@ Chat.prototype._getMessages = function(cb) {
   var self = this;
 
   this._messagesKey.get(function(err, value, context) {
+
     if (err) {
-      return;
+      return cb(err);
     }
 
     // sort by time
@@ -9450,7 +9447,11 @@ Chat.prototype._getMessages = function(cb) {
     if (MESSAGE_KEY_REGEX.test(context.key)) {
       self._addMessage(value);
     }
-  }});
+  }}, function(err) {
+    // TODO: sinon errors without this callback.
+    // sinon error: TypeError: argument at index 2 is not a function: undefined
+  });
+
 };
 
 Chat.prototype._addMessage = function(message) {
@@ -9482,28 +9483,6 @@ Chat.prototype._addMessage = function(message) {
   this._messageList.appendChild(entry);
 
   this._messageList.scrollTop = this._messageList.scrollHeight;
-};
-
-Chat.prototype._handleUserChange = function(user, keyName) {
-
-  // If user property affects chat
-  if (DISPLAY_NAME_REGEX.test(keyName) ||
-      AVATAR_URL_REGEX.test(keyName) ||
-      colors.isUserProperty(keyName)) {
-
-    var els = document.getElementsByClassName(user.id);
-    for (var i in els) {
-
-      if (els[i].nodeType === document.ELEMENT_NODE) {
-        els[i].getElementsByClassName(MESSAGE_DISPLAY_NAME_CLASS)[0].innerText = user.displayName;
-        els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundColor = user.avatarColor;
-
-        if (user.avatarUrl) {
-          els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundImage = 'url("'+user.avatarUrl+'")';
-        }
-      }
-    }
-  }
 };
 
 function truncate(str, limit) {
