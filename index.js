@@ -120,7 +120,7 @@ module.exports = Chat;
   _.bindAll(this, [
     '_handleCollapseToggle',
     '_getMessages',
-    '_sendMessage'
+    '_handleNewMessage'
   ]);
 }
 
@@ -170,8 +170,8 @@ Chat.prototype._append = function() {
   this._messageInput = this._wrapper.querySelector('.' + MESSAGE_INPUT_CLASS);
   this._messageBtn = this._wrapper.querySelector('.' + MESSAGE_BTN_CLASS);
 
-  Binder.on(this._messageInput, 'keydown', this._sendMessage);
-  Binder.on(this._messageBtn, 'click', this._sendMessage);
+  Binder.on(this._messageInput, 'keydown', this._handleNewMessage);
+  Binder.on(this._messageBtn, 'click', this._handleNewMessage);
 
   // Check if user passed a container and if so, append user list to it
   if (this._container) {
@@ -218,7 +218,33 @@ Chat.prototype._collapse = function(toggle) {
   }
 };
 
-Chat.prototype._sendMessage = function(event) {
+function generateMessageId() {
+  return new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
+}
+
+Chat.prototype.sendMessage = function(text, cb) {
+
+  var message = {};
+
+  message.text = _.escape(text);
+  message.id = generateMessageId();
+  message.user = this._userCache.getLocalUser();
+
+  var self = this;
+
+  this._messagesKey.key(message.id).set(message, function(err, value, context) {
+    if (err) {
+      return cb(err);
+    }
+
+    self._addMessage(message);
+    self._messageInput.value = '';
+
+    cb(null);
+  });
+};
+
+Chat.prototype._handleNewMessage = function(event) {
   // Only accept these
   var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
   var isValidClick = event.type === 'click';
@@ -228,26 +254,14 @@ Chat.prototype._sendMessage = function(event) {
     return;
   }
 
-  var message = {};
-
-  message.text = _.escape(this._messageInput.value);
-
-  if (message.text  === '') {
+  if (this._messageInput.value  === '') {
     return;
   }
 
-  message.id = new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
-  message.user = this._userCache.getLocalUser();
-
-  var self = this;
-
-  this._messagesKey.key(message.id).set(message, function(err, value, context) {
+  this.sendMessage(this._messageInput.value, function(err) {
     if (err) {
       return;
     }
-
-    self._addMessage(message);
-    self._messageInput.value = '';
   });
 };
 
@@ -256,8 +270,9 @@ Chat.prototype._getMessages = function(cb) {
   var self = this;
 
   this._messagesKey.get(function(err, value, context) {
+
     if (err) {
-      return;
+      return cb(err);
     }
 
     // sort by time
@@ -276,7 +291,11 @@ Chat.prototype._getMessages = function(cb) {
     if (MESSAGE_KEY_REGEX.test(context.key)) {
       self._addMessage(value);
     }
-  }});
+  }}, function(err) {
+    // TODO: sinon errors without this callback.
+    // sinon error: TypeError: argument at index 2 is not a function: undefined
+  });
+
 };
 
 Chat.prototype._addMessage = function(message) {
