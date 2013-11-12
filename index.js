@@ -33,6 +33,8 @@ var LOCAL_MESSAGE_CLASS = 'gi-local-message';
 var MESSAGE_LIST_CLASS = 'gi-message-list';
 var MESSAGE_INPUT_CLASS = 'gi-message-input';
 var MESSAGE_BTN_CLASS = 'gi-message-btn';
+var MESSAGE_AVATAR_COLOR_CLASS = 'gi-color';
+var MESSAGE_DISPLAY_NAME_CLASS = 'gi-name';
 var OVERRIDE_CLASS = 'gi-override';
 var COLLAPSE_BTN_CLASS = 'gi-collapse';
 var ANCHOR_CLASS = 'gi-anchor';
@@ -119,6 +121,7 @@ module.exports = Chat;
 
   _.bindAll(this, [
     '_handleCollapseToggle',
+    '_handleUserChange',
     '_getMessages',
     '_handleNewMessage'
   ]);
@@ -141,6 +144,7 @@ Chat.prototype.initialize = function(cb) {
   var self = this;
 
   async.series(tasks, function(err) {
+
     if (err) {
       self.destroy(function() {
         // Ignore destroy errors here since we're erroring anyway.
@@ -152,6 +156,9 @@ Chat.prototype.initialize = function(cb) {
 
     // Bind click event to collapse toggle.
     Binder.on(self._collapseBtn, 'click', self._handleCollapseToggle);
+
+    // Listen for userCache events.
+    //self._userCache.on('change', self._handleUserChange);
 
     self._isBound = true;
 
@@ -327,6 +334,28 @@ Chat.prototype._addMessage = function(message) {
   this._messageList.appendChild(entry);
 
   this._messageList.scrollTop = this._messageList.scrollHeight;
+};
+
+Chat.prototype._handleUserChange = function(user, keyName) {
+
+  // If user property affects chat
+  if (DISPLAY_NAME_REGEX.test(keyName) ||
+      AVATAR_URL_REGEX.test(keyName) ||
+      colors.isUserProperty(keyName)) {
+
+    var els = document.getElementsByClassName(user.id);
+    for (var i in els) {
+
+      if (els[i].nodeType === document.ELEMENT_NODE) {
+        els[i].getElementsByClassName(MESSAGE_DISPLAY_NAME_CLASS)[0].innerText = user.displayName;
+        els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundColor = user.avatarColor;
+
+        if (user.avatarUrl) {
+          els[i].getElementsByClassName(MESSAGE_AVATAR_COLOR_CLASS)[0].style.backgroundImage = 'url("'+user.avatarUrl+'")';
+        }
+      }
+    }
+  }
 };
 
 function truncate(str, limit) {
