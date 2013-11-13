@@ -51,13 +51,13 @@ html[xmlns] .clearfix {
 /* Right Aligned */
 .gi-chat.gi-right {
   padding: 3px 3px 0;
-  right: 0;
+  right: 64px;
 }
 
 /* Left Aligned */
 .gi-chat.gi-left {
   padding: 3px 3px 0;
-  right: 16px;
+  left: 64px;
 }
 
 /* Message List */
@@ -241,5 +241,5 @@ html[xmlns] .clearfix {
 }
 
 .gi-chat.gi-right .gi-collapse.collapsed span {
-  background-position: 11px;
+  background-position: 0 -20px;
 }

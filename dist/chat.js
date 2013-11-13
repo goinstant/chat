@@ -2707,7 +2707,7 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @returns {Object} Returns the created inverted object.
      * @example
      *
-     *  _.invert({ 'first': 'fred', 'second': 'barney' });
+     * _.invert({ 'first': 'fred', 'second': 'barney' });
      * // => { 'fred': 'first', 'barney': 'second' }
      */
     function invert(object) {
@@ -5611,8 +5611,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * @example
      *
      * var view = {
-     *  'label': 'docs',
-     *  'onClick': function() { console.log('clicked ' + this.label); }
+     *   'label': 'docs',
+     *   'onClick': function() { console.log('clicked ' + this.label); }
      * };
      *
      * _.bindAll(view);
@@ -6537,8 +6537,8 @@ require.register("lodash-lodash/dist/lodash.compat.js", function(exports, requir
      * // => 'hello mustache!'
      *
      * // using the `imports` option to import jQuery
-     * var list = '<% $.each(people, function(name) { %><li><%- name %></li><% }); %>';
-     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { '$': jQuery } });
+     * var list = '<% jq.each(people, function(name) { %><li><%- name %></li><% }); %>';
+     * _.template(list, { 'people': ['fred', 'barney'] }, { 'imports': { 'jq': jQuery } });
      * // => '<li>fred</li><li>barney</li>'
      *
      * // using the `sourceURL` option to specify a custom sourceURL for the template
@@ -9371,6 +9371,8 @@ Chat.prototype._collapse = function(toggle) {
     classes(this._collapseBtn).remove(COLLAPSED_CLASS);
 
     this._collapsed = false;
+
+    this._scrollChatToBottom();
   }
 };
 
@@ -9456,32 +9458,47 @@ Chat.prototype._getMessages = function(cb) {
 
 Chat.prototype._addMessage = function(message) {
 
+  // message vars
   var vars = {
     id: message.id,
-    text: message.text,
     shortName: truncate(message.user.displayName, this._truncateLength),
     avatarColor: message.user.avatarColor,
     avatarUrl: message.user.avatarUrl
   };
 
+  // message template
   var template = _.template(messageTemplate, vars);
-  var entry = document.createElement('li');
+  var itemEl = document.createElement('li');
+  itemEl.innerHTML = template;
 
-  entry.innerHTML = template;
-  entry.title = message.user.displayName;
-  entry.id = message.id;
-  entry.setAttribute('data-goinstant-id', message.id);
+  // message text
+  var textEl = itemEl.getElementsByClassName('gi-text')[0];
+  message.text = _.unescape(message.text);
+  var text = document.createTextNode(message.text);
+  textEl.appendChild(text);
 
-  classes(entry).add(message.user.id);
-  classes(entry).add(MESSAGE_CLASS);
+  // message attributes
+  itemEl.title = message.user.displayName;
+  itemEl.id = message.id;
+  itemEl.setAttribute('data-goinstant-id', message.id);
+
+  // message classes
+  classes(itemEl).add(message.user.id);
+  classes(itemEl).add(MESSAGE_CLASS);
 
   var localUser = this._userCache.getLocalUser();
   if (message.user.id === localUser.id) {
-    classes(entry).add(LOCAL_MESSAGE_CLASS);
+    classes(itemEl).add(LOCAL_MESSAGE_CLASS);
   }
 
-  this._messageList.appendChild(entry);
+  // append message
+  this._messageList.appendChild(itemEl);
 
+  // scroll chat
+  this._scrollChatToBottom();
+};
+
+Chat.prototype._scrollChatToBottom = function() {
   this._messageList.scrollTop = this._messageList.scrollHeight;
 };
 
@@ -9567,10 +9584,10 @@ errors.create = function(method, type) {
 
 
 require.register("chat/templates/list-template.html", function(exports, require, module){
-module.exports = '<div class="gi-chat-wrapper">\n  <div class="gi-message-list"></div>\n  <div class="gi-message-form clearfix">\n    <input class="gi-message-input" type="text"/>\n    <button class="gi-message-btn">Send</button>\n  </div>\n</div>\n<div class="gi-collapse"><span></span></div>\n';
+module.exports = '<div class="gi-chat-wrapper">\n  <ul class="gi-message-list"></ul>\n  <div class="gi-message-form clearfix">\n    <input class="gi-message-input" type="text"/>\n    <button class="gi-message-btn">Send</button>\n  </div>\n</div>\n<div class="gi-collapse"><span></span></div>\n';
 });
 require.register("chat/templates/message-template.html", function(exports, require, module){
-module.exports = '<div class="gi-color" style="background-color: <%- avatarColor %>;\n  <% if (avatarUrl) { %> background-image:url(\'<%- avatarUrl %>\'); <% } %>">\n</div>\n<div class="gi-name">\n  <%- shortName %>\n</div>\n<div class="gi-text">\n  <%- text %>\n</div>\n';
+module.exports = '<div class="gi-color" style="background-color: <%- avatarColor %>;\n  <% if (avatarUrl) { %> background-image:url(\'<%- avatarUrl %>\'); <% } %>">\n</div>\n<div class="gi-name">\n  <%- shortName %>\n</div>\n<div class="gi-text"></div>\n';
 });
 require.alias("lodash-lodash/index.js", "chat/deps/lodash/index.js");
 require.alias("lodash-lodash/dist/lodash.compat.js", "chat/deps/lodash/dist/lodash.compat.js");
