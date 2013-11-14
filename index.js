@@ -302,11 +302,12 @@ Chat.prototype._getMessages = function(cb) {
 
 Chat.prototype._addMessage = function(message) {
 
+  var shortName = truncate(message.user.displayName, this._truncateLength);
+
   // message vars
   var vars = {
     id: message.id,
-    shortName: truncate(message.user.displayName, this._truncateLength),
-    avatarColor: message.user.avatarColor
+    shortName: shortName
   };
 
   // message template
@@ -320,9 +321,12 @@ Chat.prototype._addMessage = function(message) {
   var text = document.createTextNode(message.text);
   textEl.appendChild(text);
 
+  // avatar color
+  var colorEl = itemEl.getElementsByClassName('gi-color')[0];
+  colorEl.style.backgroundColor = message.user.avatarColor;
+
   // avatar URL. avoid template, susceptible to XSS
   if (message.user.avatarUrl) {
-    var colorEl = itemEl.getElementsByClassName('gi-color')[0];
     // this will encodeURI
     colorEl.style.backgroundImage = 'url(' + message.user.avatarUrl + ')';
   }
