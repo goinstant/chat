@@ -293,11 +293,7 @@ Chat.prototype._getMessages = function(cb) {
     if (MESSAGE_KEY_REGEX.test(context.key)) {
       self._addMessage(value);
     }
-  }}, function(err) {
-    // TODO: sinon errors without this callback.
-    // sinon error: TypeError: argument at index 2 is not a function: undefined
-  });
-
+  }});
 };
 
 Chat.prototype._addMessage = function(message) {
