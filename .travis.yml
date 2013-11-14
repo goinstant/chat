@@ -5,3 +5,5 @@ before_script:
 - npm install -g grunt-cli
 env:
   global:
+  - secure: gnRNQyjED/sqZ/NsB3Cd92DlUvyKj3cxwQ+AZOrVItJa70e4cXttWOaJpodXqFzNWgm4THRYn1wOTqoffR6PtHqG0JtN6LFooKO8UDRJYLQLGxAqhAPLtpMWsB2NvhtV07h9ZdlPTUj/ng4ogUlOP32wUo+nGbVwlW9MsKu8cdc=
+  - secure: QOa0BjQ4pM2mW6jUVySeCJxYCn6kjvGRnoaF4n/ZNpbG0qh3VzWBBhj17qo9osAxeE09J33jAhSi8D1m3p+BrnC8O+oVjqlgU8NS1Jz/6Yl1vGlL1p8NZcbvHL1wFYX2O03v/diJF3495gGhw2gwvEJIRvGh6ZC/NdqlHD5ESJY=
