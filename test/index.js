@@ -30,6 +30,18 @@ describe('Chat Component', function() {
       set: sinon.stub(),
       key: createFakeKey,
       remove: sinon.stub().yields(),
+      on: sinon.stub(),
+      off: sinon.stub().callsArg(2)
+    };
+  }
+
+  function createFakeUserKey(name) {
+    return {
+      name: name,
+      get: sinon.stub().yields(),
+      set: sinon.stub(),
+      key: createFakeKey,
+      remove: sinon.stub().yields(),
       on: sinon.stub().callsArg(2),
       off: sinon.stub().callsArg(2)
     };
@@ -43,7 +55,7 @@ describe('Chat Component', function() {
     };
     fakeUser[colors.USER_PROPERTY] = '#FF0000';
 
-    fakeUserKey = createFakeKey('guest1');
+    fakeUserKey = createFakeUserKey('guest1');
     fakeRoom.user = sinon.stub().yields(null, fakeUser, fakeUserKey);
     fakeRoom._platform = {
       _user: {
@@ -63,11 +75,11 @@ describe('Chat Component', function() {
     };
 
     fakeUserKeys = [
-      createFakeKey(),
-      createFakeKey()
+      createFakeUserKey(),
+      createFakeUserKey()
     ];
 
-    fakeUsersKey = createFakeKey('/.users');
+    fakeUsersKey = createFakeUserKey('/.users');
 
     fakeRoom.users = sinon.stub().yields(null, fakeUsers, fakeUserKeys);
     fakeRoom.key = sinon.stub();
