@@ -302,12 +302,12 @@ Chat.prototype._getMessages = function(cb) {
 
 Chat.prototype._addMessage = function(message) {
 
+  var shortName = truncate(message.user.displayName, this._truncateLength);
+
   // message vars
   var vars = {
     id: message.id,
-    shortName: truncate(message.user.displayName, this._truncateLength),
-    avatarColor: message.user.avatarColor,
-    avatarUrl: message.user.avatarUrl
+    shortName: shortName
   };
 
   // message template
@@ -315,11 +315,21 @@ Chat.prototype._addMessage = function(message) {
   var itemEl = document.createElement('li');
   itemEl.innerHTML = template;
 
-  // message text
+  // message text. avoid template, susceptible to XSS
   var textEl = itemEl.getElementsByClassName('gi-text')[0];
   message.text = _.unescape(message.text);
   var text = document.createTextNode(message.text);
   textEl.appendChild(text);
+
+  // avatar color
+  var colorEl = itemEl.getElementsByClassName('gi-color')[0];
+  colorEl.style.backgroundColor = message.user.avatarColor;
+
+  // avatar URL. avoid template, susceptible to XSS
+  if (message.user.avatarUrl) {
+    // this will encodeURI
+    colorEl.style.backgroundImage = 'url(' + message.user.avatarUrl + ')';
+  }
 
   // message attributes
   itemEl.title = message.user.displayName;
