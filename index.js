@@ -47,7 +47,7 @@ var TAB = 9;
 
 /** Valid Opts */
 var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
-                     'truncateLength', 'avatars'];
+                     'truncateLength', 'avatars', 'messageExpiry'];
 
 var VALID_POSITIONS = ['left', 'right'];
 
@@ -61,7 +61,8 @@ var defaultOpts = {
   position: 'right',
   container: null,
   truncateLength: 10,
-  avatars: true
+  avatars: true,
+  messageExpiry: null
 };
 
 module.exports = Chat;
@@ -98,6 +99,9 @@ module.exports = Chat;
   if (opts.avatars && !_.isBoolean(opts.avatars)) {
     throw errors.create('Chat', 'INVALID_AVATARS');
   }
+  if (opts.messageExpiry && !_.isNumber(opts.messageExpiry)) {
+    throw errors.create('Chat', 'INVALID_MESSAGEEXPIRY');
+  }
 
   var validOpts = _.defaults(opts, defaultOpts);
 
@@ -107,6 +111,7 @@ module.exports = Chat;
   this._container = validOpts.container;
   this._truncateLength = validOpts.truncateLength;
 //  this._avatars = validOpts.avatars;
+  this._messageExpiry = validOpts.messageExpiry;
   this._wrapper = null;
   this._chatWrapper = null;
   this._collapseBtn = null;
@@ -234,7 +239,11 @@ Chat.prototype.sendMessage = function(text, cb) {
 
   var self = this;
 
-  this._messagesKey.key(message.id).set(message, function(err, value, context) {
+  var opts = {
+    expire: this._messageExpiry
+  };
+
+  this._messagesKey.key(message.id).set(message, opts, function(err, value, context) {
     if (err) {
       return cb(err);
     }

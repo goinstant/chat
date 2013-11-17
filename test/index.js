@@ -226,6 +226,16 @@ describe('Chat Component', function() {
         }, 'Chat: avatars must be a boolean');
       });
 
+      it('passes back an error if messageExpiry is not a number', function() {
+        var options = {
+          room: fakeRoom,
+          messageExpiry: 'true'
+        };
+
+        assert.exception(function() {
+          testChat = new Chat(options);
+        }, 'Chat: messageExpiry can only be a number');
+      });
     });
   });
 
