@@ -4,6 +4,8 @@
 
 --------- Intro ----------
 
+![Chat](chat.png)
+
 You can learn more in our
 [guides](https://developers.goinstant.com/v1/widgets/guides/index.html),
 and

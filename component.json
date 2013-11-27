@@ -31,7 +31,8 @@
     "chat.css"
   ],
   "images": [
-    "images/collapse-arrow-vertical.png",
-    "images/avatar-blank.png"
+    "images/sprite.png",
+    "images/sprite@2x.png",
+    "images/transparent.png"
   ]
 }
