@@ -243,11 +243,13 @@ Chat.prototype.sendMessage = function(text, cb) {
     expire: this._messageExpiry
   };
 
-  this._messagesKey.key(message.id).set(message, opts, function(err, value, context) {
+  this._messagesKey.key(message.id).set(message, opts, function(err, value) {
     if (err) {
       return cb(err);
     }
 
+    // read back from the server
+    message.text = value.text;
     self._addMessage(message);
     self._messageInput.value = '';
 
