@@ -1,3 +1,4 @@
 window.config = {
-  connectUrl: 'https://goinstant.net/YOUR_ACCOUNT/YOUR_APP'
+  connectUrl: 'https://goinstant.net/ACCOUNT/APP',
+  room: 'goinstant-widget-examples'
 };

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GoInstant: Chat Example: defaults</title>
+
+    <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
+    <script src="https://cdn.goinstant.net/widgets/user-colors/latest/user-colors.min.js"></script>
+
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="../node_modules/lodash/lodash.js"></script>
+
+    <!-- Config -->
+    <script src="../config/config.js"></script>
+
+    <!-- Widget Example Page -->
+    <link rel="stylesheet" href="../node_modules/widget-examples/css/examples.css" />
+    <script src="../node_modules/widget-examples/js/template.js"></script>
+    <script src="../node_modules/widget-examples/js/examples.js"></script>
+
+    <!-- GoInstant Widget Build -->
+    <link rel="stylesheet" href="../build/build.css" />
+    <script src="../build/build.js"></script>
+  </head>
+  <body>
+
+    <script type="text/javascript">
+
+      // Define the example
+      function widgetTest(room) {
+
+        var Chat = require('chat');
+        var UserColors = window.goinstant.widgets.UserColors;
+
+        var options = {
+          room: room
+        };
+
+        var userColors = new UserColors({ room: room });
+        userColors.choose(function(err){
+          if (err) {
+            throw err;
+          }
+        });
+
+        var chat = new Chat(options);
+
+        chat.initialize(function(err) {
+          if (err) {
+            throw err;
+          }
+        });
+
+        $('#avatar').on('click', function() {
+          room.self().key('avatarUrl').set('https://si0.twimg.com/profile_images/1539812195/400x400-GoInstant.png');
+        });
+      }
+
+      // Load the example test page
+      $(document).ready(function() {
+
+        var config = {
+          name: 'Chat',
+          desc: 'default options',
+          test: widgetTest
+        };
+
+        var example = new Example(config);
+        example.load();
+      });
+
+    </script>
+
+    <div id="common"></div>
+
+    <div id="expected">
+      <p>
+      The expected behaviour of this page is as follows:
+      </p>
+      <ul>
+        <li>The Chat widget should appear on the <strong>bottom-right</strong> of the screen.</li>
+        <li>The Chat widget should <strong>not</strong> be initially collapsed.</li>
+        <li>A new message should be appended to the bottom of the chat frame.</li>
+        <li>After clicking the <strong>Give me an avatar!</strong> button, new messages should display your avatar.</li>
+        <li>Changing your name should update <strong>your name</strong> in the user list for any new messages.</li>
+      </ul>
+    </div>
+
+    <button id="avatar">Give me an avatar!</button>
+  </body>
+</html>
