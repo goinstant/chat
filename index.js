@@ -269,11 +269,6 @@ Chat.prototype._handleNewMessage = function(event) {
     return;
   }
 
-  // Keep focus on message input unless user tabs out
-  if (event.keyCode !== TAB) {
-    this._messageInput.focus();
-  }
-
   this.sendMessage(this._messageInput.value, function(err) {
     if (err) {
       return;
