@@ -21,6 +21,8 @@ describe('Chat Component', function() {
   var fakeUsersKey;
   var fakeUserKeys;
 
+  var mockUserCache;
+
   var testChat;
 
   function createFakeKey(name) {
@@ -63,6 +65,8 @@ describe('Chat Component', function() {
       }
     };
 
+    fakeRoom.self = sinon.stub().returns(fakeUserKey);
+
     fakeUsers = {
       1234: {
         displayName: 'Guest 1',
@@ -89,6 +93,11 @@ describe('Chat Component', function() {
     fakeRoom.off = sinon.stub().callsArg(2);
     fakeRoom.users.on = sinon.stub().callsArg(2);
     fakeRoom.users.off = sinon.stub().callsArg(2);
+
+    mockUserCache = {
+      initialize: sinon.stub().yields(),
+      destroy: sinon.stub().yields()
+    };
   });
 
   describe('constructor', function() {
@@ -246,6 +255,7 @@ describe('Chat Component', function() {
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
     });
 
     afterEach(function(done) {
@@ -316,6 +326,7 @@ describe('Chat Component', function() {
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
 
       testChat.initialize(function(err) {
         if (err) {
@@ -344,8 +355,6 @@ describe('Chat Component', function() {
     var sandbox;
 
     var testChat;
-    var mockUserCache;
-
 
     beforeEach(function() {
       sandbox = sinon.sandbox.create();
@@ -363,21 +372,12 @@ describe('Chat Component', function() {
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
 
       testChat.initialize(function(err) {
         if (err) {
           return done(err);
         }
-
-        var fakeDisplayNameKey = createFakeKey('displayName');
-        fakeUserKey.key = function() {
-          return fakeDisplayNameKey;
-        };
-
-        mockUserCache = testChat._userCache;
-        mockUserCache.getUserKey = function() {
-          return fakeUserKey;
-        };
 
         done();
       });
