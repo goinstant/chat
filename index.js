@@ -269,6 +269,11 @@ Chat.prototype._handleNewMessage = function(event) {
     return;
   }
 
+  // Keep focus on message input unless user tabs out
+  if (event.keyCode !== TAB) {
+    this._messageInput.focus();
+  }
+
   this.sendMessage(this._messageInput.value, function(err) {
     if (err) {
       return;
@@ -287,11 +292,11 @@ Chat.prototype._getMessages = function(cb) {
     }
 
     // sort by time
-    value = _.sortBy(value, function(v, k) { return k; });
+    var messages = _.sortBy(value, function(v, k) { return k; });
 
-    for (var i in value) {
-      self._addMessage(value[i]);
-    }
+    _.each(messages, function(msg) {
+      self._addMessage(msg);
+    });
 
     cb();
   });
@@ -321,13 +326,13 @@ Chat.prototype._addMessage = function(message) {
   itemEl.innerHTML = template;
 
   // message text. avoid template, susceptible to XSS
-  var textEl = itemEl.getElementsByClassName('gi-text')[0];
+  var textEl = itemEl.querySelector('.gi-text');
   message.text = _.unescape(message.text);
   var text = document.createTextNode(message.text);
   textEl.appendChild(text);
 
   // avatar color
-  var colorEl = itemEl.getElementsByClassName('gi-color')[0];
+  var colorEl = itemEl.querySelector('.gi-color');
   colorEl.style.backgroundColor = message.user.avatarColor;
 
   // avatar URL. avoid template, susceptible to XSS
