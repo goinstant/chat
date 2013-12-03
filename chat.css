@@ -98,6 +98,12 @@
     }
 
     /* Avatar */
+    .gi-chat .gi-avatar-img {
+      width: 25px;
+      height: 25px;
+      vertical-align: inherit; /* Overrides breaking style in bootstrap */
+    }
+
     .gi-chat .gi-color {
       position: relative;
       display: inline-block;

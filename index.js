@@ -42,6 +42,8 @@ var ALIGN_RIGHT_CLASS = 'gi-right';
 //var DATA_GOINSTANT_ID = 'data-goinstant-id';
 var COLLAPSED_CLASS = 'collapsed';
 
+var WIDGET_NAMESPACE = 'goinstant/widgets/chat';
+
 var ENTER = 13;
 var TAB = 9;
 
@@ -53,7 +55,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var DISPLAY_NAME_REGEX = /\/displayName$/;
 var AVATAR_URL_REGEX = /\/avatarUrl$/;
-var MESSAGE_KEY_REGEX = /^\/messages\/\d+_\d+$/;
+var MESSAGE_KEY_REGEX = /^\/goinstant\/widgets\/chat\/messages\/\d+_\d+$/;
 
 var defaultOpts = {
   room: null,
@@ -110,7 +112,7 @@ module.exports = Chat;
   this._position = validOpts.position;
   this._container = validOpts.container;
   this._truncateLength = validOpts.truncateLength;
-//  this._avatars = validOpts.avatars;
+  this._avatars = validOpts.avatars;
   this._messageExpiry = validOpts.messageExpiry;
   this._wrapper = null;
   this._chatWrapper = null;
@@ -136,7 +138,7 @@ Chat.prototype.initialize = function(cb) {
   // Append markup
   this._append();
 
-  this._messagesKey = this._room.key('/messages');
+  this._messagesKey = this._room.key(WIDGET_NAMESPACE + '/messages');
 
   var tasks = [
     _.bind(this._userCache.initialize, this._userCache),
@@ -306,8 +308,9 @@ Chat.prototype._getMessages = function(cb) {
 };
 
 Chat.prototype._addMessage = function(message) {
+  var user = message.user;
 
-  var shortName = truncate(message.user.displayName, this._truncateLength);
+  var shortName = truncate(user.displayName, this._truncateLength);
 
   // message vars
   var vars = {
@@ -328,25 +331,29 @@ Chat.prototype._addMessage = function(message) {
 
   // avatar color
   var colorEl = itemEl.querySelector('.gi-color');
-  colorEl.style.backgroundColor = message.user.avatarColor;
+  colorEl.style.backgroundColor = user.avatarColor;
 
   // avatar URL. avoid template, susceptible to XSS
-  if (message.user.avatarUrl) {
-    // this will encodeURI
-    colorEl.style.backgroundImage = 'url(' + message.user.avatarUrl + ')';
+  if (this._avatars && user.avatarUrl) {
+    var imgEl = document.createElement('img');
+    imgEl.className = 'gi-avatar-img';
+    imgEl.src = _.unescape(user.avatarUrl);
+
+    colorEl.style.backgroundImage = 'none';
+    colorEl.appendChild(imgEl);
   }
 
   // message attributes
-  itemEl.title = message.user.displayName;
+  itemEl.title = user.displayName;
   itemEl.id = message.id;
   itemEl.setAttribute('data-goinstant-id', message.id);
 
   // message classes
-  classes(itemEl).add(message.user.id);
+  classes(itemEl).add(user.id);
   classes(itemEl).add(MESSAGE_CLASS);
 
   var localUser = this._userCache.getLocalUser();
-  if (message.user.id === localUser.id) {
+  if (user.id === localUser.id) {
     classes(itemEl).add(LOCAL_MESSAGE_CLASS);
   }
 
