@@ -336,12 +336,14 @@ Chat.prototype._addMessage = function(message) {
 
   // avatar URL. avoid template, susceptible to XSS
   if (this._avatars && user.avatarUrl) {
+    var avatarEl = colorEl.querySelector('.gi-avatar');
+
     var imgEl = document.createElement('img');
     imgEl.className = 'gi-avatar-img';
     imgEl.src = _.escape(user.avatarUrl);
 
     colorEl.style.backgroundImage = 'none';
-    colorEl.appendChild(imgEl);
+    avatarEl.appendChild(imgEl);
   }
 
   // message attributes

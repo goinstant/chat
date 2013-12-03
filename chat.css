@@ -98,7 +98,15 @@
     }
 
     /* Avatar */
-    .gi-chat .gi-avatar-img {
+    .gi-chat .gi-avatar {
+      overflow: hidden;
+      width: 25px;
+      height: 21px;
+      border-radius: 2px;
+    }
+
+    .gi-chat .gi-avatar .gi-avatar-img {
+      background: #f5f5f5;
       width: 25px;
       height: 25px;
       vertical-align: inherit; /* Overrides breaking style in bootstrap */
