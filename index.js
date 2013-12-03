@@ -15,6 +15,7 @@ var Binder = require('binder');
 var async = require('async');
 var _ = require('lodash');
 var trim = require('trim');
+var secureFilters = require('secure-filters');
 
 var UserCache = require('usercache');
 var colors = require('colors-common');
@@ -42,6 +43,8 @@ var ALIGN_RIGHT_CLASS = 'gi-right';
 //var DATA_GOINSTANT_ID = 'data-goinstant-id';
 var COLLAPSED_CLASS = 'collapsed';
 
+var WIDGET_NAMESPACE = 'goinstant/widgets/chat';
+
 var ENTER = 13;
 var TAB = 9;
 
@@ -53,7 +56,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var DISPLAY_NAME_REGEX = /\/displayName$/;
 var AVATAR_URL_REGEX = /\/avatarUrl$/;
-var MESSAGE_KEY_REGEX = /^\/messages\/\d+_\d+$/;
+var MESSAGE_KEY_REGEX = /^\/goinstant\/widgets\/chat\/messages\/\d+_\d+$/;
 
 var defaultOpts = {
   room: null,
@@ -110,7 +113,7 @@ module.exports = Chat;
   this._position = validOpts.position;
   this._container = validOpts.container;
   this._truncateLength = validOpts.truncateLength;
-//  this._avatars = validOpts.avatars;
+  this._avatars = validOpts.avatars;
   this._messageExpiry = validOpts.messageExpiry;
   this._wrapper = null;
   this._chatWrapper = null;
@@ -125,7 +128,8 @@ module.exports = Chat;
   _.bindAll(this, [
     '_handleCollapseToggle',
     '_getMessages',
-    '_handleNewMessage'
+    '_handleNewMessage',
+    '_messageHandler'
   ]);
 }
 
@@ -136,7 +140,7 @@ Chat.prototype.initialize = function(cb) {
   // Append markup
   this._append();
 
-  this._messagesKey = this._room.key('/messages');
+  this._messagesKey = this._room.key(WIDGET_NAMESPACE + '/messages');
 
   var tasks = [
     _.bind(this._userCache.initialize, this._userCache),
@@ -296,18 +300,25 @@ Chat.prototype._getMessages = function(cb) {
     cb();
   });
 
-  this._messagesKey.on('set', {bubble:true, listener:function(value, context) {
+  var opts = {
+    bubble: true,
+    listener: this._messageHandler
+  };
 
-    // Only accept message keys: /messages/integer_integer
-    if (MESSAGE_KEY_REGEX.test(context.key)) {
-      self._addMessage(value);
-    }
-  }});
+  this._messagesKey.on('set', opts);
+};
+
+Chat.prototype._messageHandler = function(value, context) {
+  // Only accept message keys: /messages/integer_integer
+  if (MESSAGE_KEY_REGEX.test(context.key)) {
+    this._addMessage(value);
+  }
 };
 
 Chat.prototype._addMessage = function(message) {
+  var user = message.user;
 
-  var shortName = truncate(message.user.displayName, this._truncateLength);
+  var shortName = truncate(user.displayName, this._truncateLength);
 
   // message vars
   var vars = {
@@ -328,25 +339,31 @@ Chat.prototype._addMessage = function(message) {
 
   // avatar color
   var colorEl = itemEl.querySelector('.gi-color');
-  colorEl.style.backgroundColor = message.user.avatarColor;
+  colorEl.style.backgroundColor = user.avatarColor;
 
   // avatar URL. avoid template, susceptible to XSS
-  if (message.user.avatarUrl) {
-    // this will encodeURI
-    colorEl.style.backgroundImage = 'url(' + message.user.avatarUrl + ')';
+  if (this._avatars && user.avatarUrl) {
+    var avatarEl = colorEl.querySelector('.gi-avatar');
+
+    var imgEl = document.createElement('img');
+    imgEl.className = 'gi-avatar-img';
+    imgEl.src = _.escape(user.avatarUrl);
+
+    colorEl.style.backgroundImage = 'none';
+    avatarEl.appendChild(imgEl);
   }
 
   // message attributes
-  itemEl.title = message.user.displayName;
+  itemEl.title = user.displayName;
   itemEl.id = message.id;
   itemEl.setAttribute('data-goinstant-id', message.id);
 
   // message classes
-  classes(itemEl).add(message.user.id);
+  classes(itemEl).add(user.id);
   classes(itemEl).add(MESSAGE_CLASS);
 
   var localUser = this._userCache.getLocalUser();
-  if (message.user.id === localUser.id) {
+  if (user.id === localUser.id) {
     classes(itemEl).add(LOCAL_MESSAGE_CLASS);
   }
 
@@ -382,6 +399,8 @@ Chat.prototype.destroy = function(cb) {
   if (!cb || !_.isFunction(cb)) {
     throw errors.create('destroy', 'INVALID_CALLBACK');
   }
+
+  this._messagesKey.off('set', this._messageHandler);
 
   if (this._isBound) {
     Binder.off(this._collapseBtn, 'click', this._handleCollapseToggle);
