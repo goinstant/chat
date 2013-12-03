@@ -15,6 +15,7 @@ var Binder = require('binder');
 var async = require('async');
 var _ = require('lodash');
 var trim = require('trim');
+var secureFilters = require('secure-filters');
 
 var UserCache = require('usercache');
 var colors = require('colors-common');
@@ -337,7 +338,7 @@ Chat.prototype._addMessage = function(message) {
   if (this._avatars && user.avatarUrl) {
     var imgEl = document.createElement('img');
     imgEl.className = 'gi-avatar-img';
-    imgEl.src = _.unescape(user.avatarUrl);
+    imgEl.src = _.escape(user.avatarUrl);
 
     colorEl.style.backgroundImage = 'none';
     colorEl.appendChild(imgEl);
