@@ -5,13 +5,16 @@
   "version": "0.0.1",
   "keywords": [],
   "dependencies": {
-    "lodash/lodash": "*",
-    "stagas/binder": "*",
-    "component/classes": "*",
-    "component/trim": "*",
-    "caolan/async": "*",
-    "goinstant/usercache": "*",
-    "goinstant/colors-common": "*"
+    "lodash/lodash": "2.3.0",
+    "stagas/binder": "0.0.1",
+    "component/emitter": "1.1.0",
+    "yields/prevent": "0.0.2",
+    "component/classes": "1.1.4",
+    "component/trim": "0.0.1",
+    "caolan/async": "f01b3992fbe7aa2f4881152143608ad666aea1cc",
+    "goinstant/usercache": "v1.0.0",
+    "goinstant/colors-common": "v1.0.0",
+    "goinstant/secure-filters": "v1.0.4"
   },
   "development": {
     "visionmedia/mocha": "*",
