@@ -128,7 +128,8 @@ module.exports = Chat;
   _.bindAll(this, [
     '_handleCollapseToggle',
     '_getMessages',
-    '_handleNewMessage'
+    '_handleNewMessage',
+    '_messageHandler'
   ]);
 }
 
@@ -299,13 +300,19 @@ Chat.prototype._getMessages = function(cb) {
     cb();
   });
 
-  this._messagesKey.on('set', {bubble:true, listener:function(value, context) {
+  var opts = {
+    bubble: true,
+    listener: this._messageHandler
+  };
 
-    // Only accept message keys: /messages/integer_integer
-    if (MESSAGE_KEY_REGEX.test(context.key)) {
-      self._addMessage(value);
-    }
-  }});
+  this._messagesKey.on('set', opts);
+};
+
+Chat.prototype._messageHandler = function(value, context) {
+  // Only accept message keys: /messages/integer_integer
+  if (MESSAGE_KEY_REGEX.test(context.key)) {
+    this._addMessage(value);
+  }
 };
 
 Chat.prototype._addMessage = function(message) {
@@ -392,6 +399,8 @@ Chat.prototype.destroy = function(cb) {
   if (!cb || !_.isFunction(cb)) {
     throw errors.create('destroy', 'INVALID_CALLBACK');
   }
+
+  this._messagesKey.off('set', this._messageHandler);
 
   if (this._isBound) {
     Binder.off(this._collapseBtn, 'click', this._handleCollapseToggle);

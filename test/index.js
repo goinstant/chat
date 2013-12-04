@@ -33,7 +33,7 @@ describe('Chat Component', function() {
       key: createFakeKey,
       remove: sinon.stub().yields(),
       on: sinon.stub(),
-      off: sinon.stub().callsArg(2)
+      off: sinon.stub()
     };
   }
 
@@ -44,61 +44,46 @@ describe('Chat Component', function() {
       set: sinon.stub(),
       key: createFakeKey,
       remove: sinon.stub().yields(),
-      on: sinon.stub().callsArg(2),
-      off: sinon.stub().callsArg(2)
+      on: sinon.stub(),
+      off: sinon.stub()
     };
   }
 
-  beforeEach(function() {
-    fakeRoom = {};
-    fakeUser = {
+  fakeUser = {
+    displayName: 'Guest 1',
+    id: '1234'
+  };
+
+  fakeUser[colors.USER_PROPERTY] = '#FF0000';
+
+  fakeUserKey = createFakeUserKey('guest1');
+
+  fakeRoom = {
+    self: sinon.stub().returns(fakeUserKey),
+    key: createFakeKey
+  };
+
+  fakeUsers = {
+    1234: {
       displayName: 'Guest 1',
       id: '1234'
-    };
-    fakeUser[colors.USER_PROPERTY] = '#FF0000';
+    },
+    5678: {
+      displayName: 'Guest 2',
+      id: '5678'
+    }
+  };
 
-    fakeUserKey = createFakeUserKey('guest1');
-    fakeRoom.user = sinon.stub().yields(null, fakeUser, fakeUserKey);
-    fakeRoom._platform = {
-      _user: {
-        id: fakeUser.id
-      }
-    };
+  fakeUserKeys = [
+    createFakeUserKey(),
+    createFakeUserKey()
+  ];
 
-    fakeRoom.self = sinon.stub().returns(fakeUserKey);
-
-    fakeUsers = {
-      1234: {
-        displayName: 'Guest 1',
-        id: '1234'
-      },
-      5678: {
-        displayName: 'Guest 2',
-        id: '5678'
-      }
-    };
-
-    fakeUserKeys = [
-      createFakeUserKey(),
-      createFakeUserKey()
-    ];
-
-    fakeUsersKey = createFakeUserKey('/.users');
-
-    fakeRoom.users = sinon.stub().yields(null, fakeUsers, fakeUserKeys);
-    fakeRoom.key = sinon.stub();
-    fakeRoom.key.returns(createFakeKey());
-    fakeRoom.key.withArgs('/.users').returns(fakeUsersKey);
-    fakeRoom.on = sinon.stub().callsArg(2);
-    fakeRoom.off = sinon.stub().callsArg(2);
-    fakeRoom.users.on = sinon.stub().callsArg(2);
-    fakeRoom.users.off = sinon.stub().callsArg(2);
-
-    mockUserCache = {
-      initialize: sinon.stub().yields(),
-      destroy: sinon.stub().yields()
-    };
-  });
+  mockUserCache = {
+    initialize: sinon.stub().yields(),
+    destroy: sinon.stub().yields(),
+    getLocalUser: sinon.stub().returns(fakeUser)
+  };
 
   describe('constructor', function() {
     afterEach(function(done) {
@@ -350,7 +335,7 @@ describe('Chat Component', function() {
   });
 
   describe('send message', function() {
-    var Binder = require('binder');
+    var binder = require('binder');
 
     var sandbox;
 
@@ -365,7 +350,7 @@ describe('Chat Component', function() {
     });
 
     beforeEach(function(done) {
-      sandbox.stub(Binder, 'on');
+      sandbox.stub(binder, 'on');
 
       var options = {
         room: fakeRoom
@@ -394,8 +379,73 @@ describe('Chat Component', function() {
     });
 
     it('binds to the click event', function() {
-      sinon.assert.calledWith(Binder.on, testChat._messageBtn, 'click', testChat._handleNewMessage);
+      sinon.assert.calledWith(binder.on, testChat._messageBtn, 'click', testChat._handleNewMessage);
+    });
+  });
+
+  describe('add message', function() {
+    beforeEach(function(done) {
+      var options = {
+        room: fakeRoom
+      };
+
+      testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
+      testChat.initialize(done);
     });
 
+    afterEach(function(done) {
+      var el = document.querySelector('.gi-chat');
+
+      if (!testChat || !el) {
+        return done();
+      }
+
+      testChat.destroy(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        testChat = null;
+
+        done();
+      });
+    });
+
+    it('adds a message', function() {
+      var fakeMessage = {
+        id: 12345,
+        test: 'this is only a test',
+        user: fakeUser
+      };
+
+      var rgb = 'rgb(255, 0, 0)';
+
+      testChat._addMessage(fakeMessage);
+
+      var msgEls = $(testChat._messageList).children();
+
+      assert.equal(msgEls.length, 1);
+      assert.equal(msgEls.eq(0).attr('id'), fakeMessage.id);
+      assert.equal(msgEls.eq(0).attr('title'), fakeUser.displayName);
+      assert.equal(msgEls.eq(0).find('.gi-color').css('background-color'), rgb);
+    });
+
+    it('adds a message with the user\'s avatar',function() {
+      var fakeUser2 = _.clone(fakeUser);
+      fakeUser2.avatarUrl = 'http://goinstant.com/test.png';
+
+      var fakeMessage = {
+        id: 67890,
+        test: 'this is only a test 2',
+        user: fakeUser2
+      };
+
+      testChat._addMessage(fakeMessage);
+
+      var msgEl = $(testChat._messageList).children().eq(0);
+
+      assert.equal(msgEl.find('.gi-avatar-img').attr('src'), fakeUser2.avatarUrl);
+    });
   });
 });
