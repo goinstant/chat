@@ -15,12 +15,13 @@ var Binder = require('binder');
 var async = require('async');
 var _ = require('lodash');
 var trim = require('trim');
-var secureFilters = require('secure-filters');
+var async = require('async');
 
 var UserCache = require('usercache');
 var colors = require('colors-common');
 
 var errors = require('./lib/errors');
+var XRegExp = require('./lib/xregexp-all').XRegExp;
 
 /** Templates */
 var listTemplate = require('./templates/list-template.html');
@@ -57,6 +58,7 @@ var VALID_POSITIONS = ['left', 'right'];
 var DISPLAY_NAME_REGEX = /\/displayName$/;
 var AVATAR_URL_REGEX = /\/avatarUrl$/;
 var MESSAGE_KEY_REGEX = /^\/goinstant\/widgets\/chat\/messages\/\d+_\d+$/;
+var TEXT_URL_REGEX = /(\b(?:http[s]?:\/\/|www\.)[-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]\b)/ig;
 
 var defaultOpts = {
   room: null,
@@ -129,7 +131,8 @@ module.exports = Chat;
     '_handleCollapseToggle',
     '_getMessages',
     '_handleNewMessage',
-    '_messageHandler'
+    '_messageHandler',
+    '_addMessage'
   ]);
 }
 
@@ -252,10 +255,11 @@ Chat.prototype.sendMessage = function(text, cb) {
       return cb(err);
     }
 
-    self._addMessage(message);
-    self._messageInput.value = '';
+    self._addMessage(message, function() {
+      self._messageInput.value = '';
 
-    cb(null);
+      cb(null);
+    });
   });
 };
 
@@ -293,11 +297,9 @@ Chat.prototype._getMessages = function(cb) {
     // sort by time
     var messages = _.sortBy(value, function(v, k) { return k; });
 
-    _.each(messages, function(msg) {
-      self._addMessage(msg);
+    async.eachSeries(messages, self._addMessage, function(msg) {
+      cb();
     });
-
-    cb();
   });
 
   var opts = {
@@ -311,11 +313,13 @@ Chat.prototype._getMessages = function(cb) {
 Chat.prototype._messageHandler = function(value, context) {
   // Only accept message keys: /messages/integer_integer
   if (MESSAGE_KEY_REGEX.test(context.key)) {
-    this._addMessage(value);
+    this._addMessage(value, function() {
+
+    });
   }
 };
 
-Chat.prototype._addMessage = function(message) {
+Chat.prototype._addMessage = function(message, cb) {
   var user = message.user;
 
   var shortName = truncate(user.displayName, this._truncateLength);
@@ -334,45 +338,149 @@ Chat.prototype._addMessage = function(message) {
   // message text. avoid template, susceptible to XSS
   var textEl = itemEl.querySelector('.gi-text');
   message.text = _.unescape(message.text);
-  var text = document.createTextNode(message.text);
-  textEl.appendChild(text);
 
-  // avatar color
-  var colorEl = itemEl.querySelector('.gi-color');
-  colorEl.style.backgroundColor = user.avatarColor;
+  var self = this;
 
-  // avatar URL. avoid template, susceptible to XSS
-  if (this._avatars && user.avatarUrl) {
-    var avatarEl = colorEl.querySelector('.gi-avatar');
+  this._renderText(textEl, message.text, function() {
 
-    var imgEl = document.createElement('img');
-    imgEl.className = 'gi-avatar-img';
-    imgEl.src = _.escape(user.avatarUrl);
+    //var text = document.createTextNode(message.text);
+    //textEl.appendChild(text);
 
-    colorEl.style.backgroundImage = 'none';
-    avatarEl.appendChild(imgEl);
-  }
+    // avatar color
+    var colorEl = itemEl.querySelector('.gi-color');
+    colorEl.style.backgroundColor = user.avatarColor;
 
-  // message attributes
-  itemEl.title = user.displayName;
-  itemEl.id = message.id;
-  itemEl.setAttribute('data-goinstant-id', message.id);
+    // avatar URL. avoid template, susceptible to XSS
+    if (self._avatars && user.avatarUrl) {
+      var avatarEl = colorEl.querySelector('.gi-avatar');
 
-  // message classes
-  classes(itemEl).add(user.id);
-  classes(itemEl).add(MESSAGE_CLASS);
+      var imgEl = document.createElement('img');
+      imgEl.className = 'gi-avatar-img';
+      imgEl.src = _.escape(user.avatarUrl);
 
-  var localUser = this._userCache.getLocalUser();
-  if (user.id === localUser.id) {
-    classes(itemEl).add(LOCAL_MESSAGE_CLASS);
-  }
+      colorEl.style.backgroundImage = 'none';
+      avatarEl.appendChild(imgEl);
+    }
 
-  // append message
-  this._messageList.appendChild(itemEl);
+    // message attributes
+    itemEl.title = user.displayName;
+    itemEl.id = message.id;
+    itemEl.setAttribute('data-goinstant-id', message.id);
 
-  // scroll chat
-  this._scrollChatToBottom();
+    // message classes
+    classes(itemEl).add(user.id);
+    classes(itemEl).add(MESSAGE_CLASS);
+
+    var localUser = self._userCache.getLocalUser();
+    if (user.id === localUser.id) {
+      classes(itemEl).add(LOCAL_MESSAGE_CLASS);
+    }
+
+    // append message
+    self._messageList.appendChild(itemEl);
+
+    // scroll chat
+    self._scrollChatToBottom();
+    cb();
+  });
 };
+
+Chat.prototype._renderText = function(textEl, text, cb) {
+  var nodes = XRegExp.split(text, TEXT_URL_REGEX);
+  var tasks = [];
+
+  var self = this;
+
+  _.each(nodes, function(node, index) {
+
+    // Check if the node is just text
+    if (!node.match(TEXT_URL_REGEX)) {
+      nodes[index] = document.createTextNode(node);
+      return;
+    }
+
+    // Check if the url node is an img
+    tasks.push(_.bind(self._renderUrl, self, nodes, index));
+  });
+
+  async.parallel(tasks, function(err, images) {
+
+    // Add in-line nodes first
+    _.each(nodes, function(node, index) {
+      if (node === '') {
+        return;
+      }
+
+      textEl.appendChild(node);
+    });
+
+    if (images && !_.isArray(images)) {
+      images = [images];
+    }
+
+    // Append images at the end of the message block
+    _.each(images, function(image) {
+      if (!image) {
+        return;
+      }
+
+      textEl.appendChild(image);
+    });
+
+    cb();
+  });
+};
+
+Chat.prototype._renderUrl = function(nodes, index, cb) {
+  var node = nodes[index];
+
+  // Make URL absolute
+  if (node.substring(0, 4) !== 'http') {
+    node = 'http://' + node;
+  }
+
+  validImage(node, function(img) {
+    if (!img) {
+      var linkEl = document.createElement('a');
+      var textNode = document.createTextNode(node);
+
+      linkEl.href = node;
+      linkEl.target = '_blank'; // Opens page in new window/tab
+      linkEl.className = 'gi-link';
+      linkEl.appendChild(textNode);
+
+      nodes[index] = linkEl;
+      return cb();
+    }
+
+    nodes[index] = ''; // Clear the img url from the test but keep index
+    img.className = 'gi-img';
+
+    return cb(null, img);
+  });
+};
+
+function validImage(imgSrc, cb) {
+  // Invalid img urls
+  if (!imgSrc || !_.isString(imgSrc)) {
+    return cb(null);
+  }
+
+  var img = new Image();
+  img.onerror = function() {
+    return cb(null);
+  };
+
+  img.onabort = function() {
+    return cb(null);
+  };
+
+  img.onload = function() {
+    return cb(img);
+  };
+
+  img.src = imgSrc;
+}
 
 Chat.prototype._scrollChatToBottom = function() {
   this._messageList.scrollTop = this._messageList.scrollHeight;
