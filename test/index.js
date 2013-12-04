@@ -412,7 +412,7 @@ describe('Chat Component', function() {
       });
     });
 
-    it('adds a message', function() {
+    it('adds a message', function(done) {
       var fakeMessage = {
         id: 12345,
         test: 'this is only a test',
@@ -421,17 +421,19 @@ describe('Chat Component', function() {
 
       var rgb = 'rgb(255, 0, 0)';
 
-      testChat._addMessage(fakeMessage);
+      testChat._addMessage(fakeMessage, function() {
 
-      var msgEls = $(testChat._messageList).children();
+        var msgEls = $(testChat._messageList).children();
 
-      assert.equal(msgEls.length, 1);
-      assert.equal(msgEls.eq(0).attr('id'), fakeMessage.id);
-      assert.equal(msgEls.eq(0).attr('title'), fakeUser.displayName);
-      assert.equal(msgEls.eq(0).find('.gi-color').css('background-color'), rgb);
+        assert.equal(msgEls.length, 1);
+        assert.equal(msgEls.eq(0).attr('id'), fakeMessage.id);
+        assert.equal(msgEls.eq(0).attr('title'), fakeUser.displayName);
+        assert.equal(msgEls.eq(0).find('.gi-color').css('background-color'), rgb);
+      done();
+      });
     });
 
-    it('adds a message with the user\'s avatar',function() {
+    it('adds a message with the user\'s avatar',function(done) {
       var fakeUser2 = _.clone(fakeUser);
       fakeUser2.avatarUrl = 'http://goinstant.com/test.png';
 
@@ -441,11 +443,13 @@ describe('Chat Component', function() {
         user: fakeUser2
       };
 
-      testChat._addMessage(fakeMessage);
+      testChat._addMessage(fakeMessage, function() {
 
-      var msgEl = $(testChat._messageList).children().eq(0);
+        var msgEl = $(testChat._messageList).children().eq(0);
 
-      assert.equal(msgEl.find('.gi-avatar-img').attr('src'), fakeUser2.avatarUrl);
+        assert.equal(msgEl.find('.gi-avatar-img').attr('src'), fakeUser2.avatarUrl);
+        done();
+      });
     });
   });
 });
