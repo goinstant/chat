@@ -164,8 +164,8 @@
       font-size: 12px;
     }
 
-    .gi-chat .gi-text .gi-img {
-      width: 100%;
+    .gi-chat .gi-text .gi-image {
+      max-width: 100%;
       height: auto;
       margin-top: 10px;
     }
