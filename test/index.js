@@ -1,7 +1,7 @@
 /*jshint browser:true, node:false*/
 /*global require, sinon*/
 
-describe('Chat Component', function() {
+describe('Chat Widget', function() {
   "use strict";
 
   var assert = window.assert;
@@ -11,17 +11,11 @@ describe('Chat Component', function() {
 
   var Chat = require('chat');
 
-  var colors = require('colors-common');
-
   var fakeRoom;
-  var fakeUser;
-  var fakeUserKey;
-
-  var fakeUsers;
-  var fakeUsersKey;
-  var fakeUserKeys;
+  var fakeUI;
 
   var mockUserCache;
+  var mockView;
 
   var testChat;
 
@@ -37,52 +31,25 @@ describe('Chat Component', function() {
     };
   }
 
-  function createFakeUserKey(name) {
-    return {
-      name: name,
-      get: sinon.stub().yields(),
-      set: sinon.stub(),
-      key: createFakeKey,
-      remove: sinon.stub().yields(),
-      on: sinon.stub(),
-      off: sinon.stub()
-    };
-  }
-
-  fakeUser = {
-    displayName: 'Guest 1',
-    id: '1234'
-  };
-
-  fakeUser[colors.USER_PROPERTY] = '#FF0000';
-
-  fakeUserKey = createFakeUserKey('guest1');
-
   fakeRoom = {
-    self: sinon.stub().returns(fakeUserKey),
     key: createFakeKey
   };
 
-  fakeUsers = {
-    1234: {
-      displayName: 'Guest 1',
-      id: '1234'
-    },
-    5678: {
-      displayName: 'Guest 2',
-      id: '5678'
-    }
-  };
-
-  fakeUserKeys = [
-    createFakeUserKey(),
-    createFakeUserKey()
-  ];
-
   mockUserCache = {
     initialize: sinon.stub().yields(),
-    destroy: sinon.stub().yields(),
-    getLocalUser: sinon.stub().returns(fakeUser)
+    destroy: sinon.stub().yields()
+  };
+
+  fakeUI = {
+    collapseBtn: document.createElement('div'),
+    messageInput: document.createElement('input'),
+    messageBtn: document.createElement('button')
+  };
+
+  mockView = {
+    initialize: sinon.stub(),
+    destroy: sinon.stub(),
+    getUI: sinon.stub().returns(fakeUI)
   };
 
   describe('constructor', function() {
@@ -110,8 +77,11 @@ describe('Chat Component', function() {
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
+      testChat._view = mockView;
 
       assert.isObject(testChat);
+      assert.isTrue(testChat instanceof Chat);
     });
 
     describe('errors', function() {
@@ -233,7 +203,7 @@ describe('Chat Component', function() {
     });
   });
 
-  describe('.initialize', function() {
+  describe('#initialize', function() {
     beforeEach(function() {
       var options = {
         room: fakeRoom
@@ -241,6 +211,7 @@ describe('Chat Component', function() {
 
       testChat = new Chat(options);
       testChat._userCache = mockUserCache;
+      testChat._view = mockView;
     });
 
     afterEach(function(done) {
@@ -271,24 +242,6 @@ describe('Chat Component', function() {
       });
     });
 
-    it('renders chat in the DOM', function(done) {
-      testChat.initialize(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        var container = document.querySelector('.gi-chat');
-        var inner = document.querySelector('.gi-message-list');
-        var collapseBtn = document.querySelector('.gi-collapse');
-
-        assert(container);
-        assert(inner);
-        assert(collapseBtn);
-
-        done();
-      });
-    });
-
     describe('errors', function() {
       it('throws an error if not passed a callback', function() {
         assert.exception(function() {
@@ -304,7 +257,7 @@ describe('Chat Component', function() {
     });
   });
 
-  describe('.destroy', function() {
+  describe('#destroy', function() {
     beforeEach(function(done) {
       var options = {
         room: fakeRoom
@@ -312,6 +265,7 @@ describe('Chat Component', function() {
 
       testChat = new Chat(options);
       testChat._userCache = mockUserCache;
+      testChat._view = mockView;
 
       testChat.initialize(function(err) {
         if (err) {
@@ -334,122 +288,4 @@ describe('Chat Component', function() {
 
   });
 
-  describe('send message', function() {
-    var binder = require('binder');
-
-    var sandbox;
-
-    var testChat;
-
-    beforeEach(function() {
-      sandbox = sinon.sandbox.create();
-    });
-
-    afterEach(function() {
-      sandbox.restore();
-    });
-
-    beforeEach(function(done) {
-      sandbox.stub(binder, 'on');
-
-      var options = {
-        room: fakeRoom
-      };
-
-      testChat = new Chat(options);
-      testChat._userCache = mockUserCache;
-
-      testChat.initialize(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        done();
-      });
-    });
-
-    afterEach(function(done) {
-      testChat.destroy(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        done();
-      });
-    });
-
-    it('binds to the click event', function() {
-      sinon.assert.calledWith(binder.on, testChat._messageBtn, 'click', testChat._handleNewMessage);
-    });
-  });
-
-  describe('add message', function() {
-    beforeEach(function(done) {
-      var options = {
-        room: fakeRoom
-      };
-
-      testChat = new Chat(options);
-      testChat._userCache = mockUserCache;
-      testChat.initialize(done);
-    });
-
-    afterEach(function(done) {
-      var el = document.querySelector('.gi-chat');
-
-      if (!testChat || !el) {
-        return done();
-      }
-
-      testChat.destroy(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        testChat = null;
-
-        done();
-      });
-    });
-
-    it('adds a message', function(done) {
-      var fakeMessage = {
-        id: 12345,
-        test: 'this is only a test',
-        user: fakeUser
-      };
-
-      var rgb = 'rgb(255, 0, 0)';
-
-      testChat._addMessage(fakeMessage, function() {
-
-        var msgEls = $(testChat._messageList).children();
-
-        assert.equal(msgEls.length, 1);
-        assert.equal(msgEls.eq(0).attr('id'), fakeMessage.id);
-        assert.equal(msgEls.eq(0).attr('title'), fakeUser.displayName);
-        assert.equal(msgEls.eq(0).find('.gi-color').css('background-color'), rgb);
-      done();
-      });
-    });
-
-    it('adds a message with the user\'s avatar',function(done) {
-      var fakeUser2 = _.clone(fakeUser);
-      fakeUser2.avatarUrl = 'http://goinstant.com/test.png';
-
-      var fakeMessage = {
-        id: 67890,
-        test: 'this is only a test 2',
-        user: fakeUser2
-      };
-
-      testChat._addMessage(fakeMessage, function() {
-
-        var msgEl = $(testChat._messageList).children().eq(0);
-
-        assert.equal(msgEl.find('.gi-avatar-img').attr('src'), fakeUser2.avatarUrl);
-        done();
-      });
-    });
-  });
 });
