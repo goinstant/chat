@@ -1,17 +1,18 @@
 [![Build Status](https://travis-ci.org/goinstant/chat.png?branch=master)](https://travis-ci.org/goinstant/chat)
 
-## [Chat](https://developers.goinstant.com/v1/widgets/chat.html)
+## [Chat Widget](https://developers.goinstant.com/v1/widgets/chat.html)
 
---------- Intro ----------
+The [GoInstant](https://goinstant.com) Chat [widget](https://developers.goinstant.com/v1/widgets/index.html)
+--------- ... Description Goes Here---------
 
 ![Chat](chat.png)
 
-You can learn more in our
-[guides](https://developers.goinstant.com/v1/widgets/guides/index.html),
-and
-[documentation](https://developers.goinstant.com/v1/widgets/chat.html).
+[Sign up](https://goinstant.com/signup) and build a GoInstant application today.
+You can learn more in our [guides](https://developers.goinstant.com/v1/widgets/guides/index.html),
+and [documentation](https://developers.goinstant.com/v1/widgets/chat.html).
 
-Have questions? We're on IRC. #goinstant on [Freenode](http://freenode.net/).
+Have questions? Contact us using [this form](https://goinstant.com/contact) or
+chat with us on IRC. #goinstant on [Freenode](http://freenode.net/).
 
 ## Packaging
 For your convenience, we've packaged the Chat widget in several
@@ -126,3 +127,14 @@ window.config = {
 ```
 open examples/index.html
 ```
+
+## Widgets are built on top of GoInstant
+
+[GoInstant](https://goinstant.com) is an API for integrating realtime,
+multi-user functionality into your app. You can check it out and [sign up for free](https://goinstant.com/signup).
+
+## License
+
+&copy; 2013 GoInstant Inc., a salesforce.com company
+
+Licensed under the BSD 3-clause license.

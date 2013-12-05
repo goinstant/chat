@@ -1,7 +1,7 @@
 /*jshint browser:true, node:false*/
 /*global require, sinon*/
 
-describe('Chat Component', function() {
+describe('Chat Widget', function() {
   "use strict";
 
   var assert = window.assert;
@@ -11,15 +11,11 @@ describe('Chat Component', function() {
 
   var Chat = require('chat');
 
-  var colors = require('colors-common');
-
   var fakeRoom;
-  var fakeUser;
-  var fakeUserKey;
+  var fakeUI;
 
-  var fakeUsers;
-  var fakeUsersKey;
-  var fakeUserKeys;
+  var mockUserCache;
+  var mockView;
 
   var testChat;
 
@@ -31,65 +27,30 @@ describe('Chat Component', function() {
       key: createFakeKey,
       remove: sinon.stub().yields(),
       on: sinon.stub(),
-      off: sinon.stub().callsArg(2)
+      off: sinon.stub()
     };
   }
 
-  function createFakeUserKey(name) {
-    return {
-      name: name,
-      get: sinon.stub().yields(),
-      set: sinon.stub(),
-      key: createFakeKey,
-      remove: sinon.stub().yields(),
-      on: sinon.stub().callsArg(2),
-      off: sinon.stub().callsArg(2)
-    };
-  }
+  fakeRoom = {
+    key: createFakeKey
+  };
 
-  beforeEach(function() {
-    fakeRoom = {};
-    fakeUser = {
-      displayName: 'Guest 1',
-      id: '1234'
-    };
-    fakeUser[colors.USER_PROPERTY] = '#FF0000';
+  mockUserCache = {
+    initialize: sinon.stub().yields(),
+    destroy: sinon.stub().yields()
+  };
 
-    fakeUserKey = createFakeUserKey('guest1');
-    fakeRoom.user = sinon.stub().yields(null, fakeUser, fakeUserKey);
-    fakeRoom._platform = {
-      _user: {
-        id: fakeUser.id
-      }
-    };
+  fakeUI = {
+    collapseBtn: document.createElement('div'),
+    messageInput: document.createElement('input'),
+    messageBtn: document.createElement('button')
+  };
 
-    fakeUsers = {
-      1234: {
-        displayName: 'Guest 1',
-        id: '1234'
-      },
-      5678: {
-        displayName: 'Guest 2',
-        id: '5678'
-      }
-    };
-
-    fakeUserKeys = [
-      createFakeUserKey(),
-      createFakeUserKey()
-    ];
-
-    fakeUsersKey = createFakeUserKey('/.users');
-
-    fakeRoom.users = sinon.stub().yields(null, fakeUsers, fakeUserKeys);
-    fakeRoom.key = sinon.stub();
-    fakeRoom.key.returns(createFakeKey());
-    fakeRoom.key.withArgs('/.users').returns(fakeUsersKey);
-    fakeRoom.on = sinon.stub().callsArg(2);
-    fakeRoom.off = sinon.stub().callsArg(2);
-    fakeRoom.users.on = sinon.stub().callsArg(2);
-    fakeRoom.users.off = sinon.stub().callsArg(2);
-  });
+  mockView = {
+    initialize: sinon.stub(),
+    destroy: sinon.stub(),
+    getUI: sinon.stub().returns(fakeUI)
+  };
 
   describe('constructor', function() {
     afterEach(function(done) {
@@ -116,8 +77,11 @@ describe('Chat Component', function() {
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
+      testChat._view = mockView;
 
       assert.isObject(testChat);
+      assert.isTrue(testChat instanceof Chat);
     });
 
     describe('errors', function() {
@@ -239,13 +203,15 @@ describe('Chat Component', function() {
     });
   });
 
-  describe('.initialize', function() {
+  describe('#initialize', function() {
     beforeEach(function() {
       var options = {
         room: fakeRoom
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
+      testChat._view = mockView;
     });
 
     afterEach(function(done) {
@@ -276,24 +242,6 @@ describe('Chat Component', function() {
       });
     });
 
-    it('renders chat in the DOM', function(done) {
-      testChat.initialize(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        var container = document.querySelector('.gi-chat');
-        var inner = document.querySelector('.gi-message-list');
-        var collapseBtn = document.querySelector('.gi-collapse');
-
-        assert(container);
-        assert(inner);
-        assert(collapseBtn);
-
-        done();
-      });
-    });
-
     describe('errors', function() {
       it('throws an error if not passed a callback', function() {
         assert.exception(function() {
@@ -309,13 +257,15 @@ describe('Chat Component', function() {
     });
   });
 
-  describe('.destroy', function() {
+  describe('#destroy', function() {
     beforeEach(function(done) {
       var options = {
         room: fakeRoom
       };
 
       testChat = new Chat(options);
+      testChat._userCache = mockUserCache;
+      testChat._view = mockView;
 
       testChat.initialize(function(err) {
         if (err) {
@@ -338,64 +288,4 @@ describe('Chat Component', function() {
 
   });
 
-  describe('send message', function() {
-    var Binder = require('binder');
-
-    var sandbox;
-
-    var testChat;
-    var mockUserCache;
-
-
-    beforeEach(function() {
-      sandbox = sinon.sandbox.create();
-    });
-
-    afterEach(function() {
-      sandbox.restore();
-    });
-
-    beforeEach(function(done) {
-      sandbox.stub(Binder, 'on');
-
-      var options = {
-        room: fakeRoom
-      };
-
-      testChat = new Chat(options);
-
-      testChat.initialize(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        var fakeDisplayNameKey = createFakeKey('displayName');
-        fakeUserKey.key = function() {
-          return fakeDisplayNameKey;
-        };
-
-        mockUserCache = testChat._userCache;
-        mockUserCache.getUserKey = function() {
-          return fakeUserKey;
-        };
-
-        done();
-      });
-    });
-
-    afterEach(function(done) {
-      testChat.destroy(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        done();
-      });
-    });
-
-    it('binds to the click event', function() {
-      sinon.assert.calledWith(Binder.on, testChat._messageBtn, 'click', testChat._handleNewMessage);
-    });
-
-  });
 });

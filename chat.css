@@ -32,7 +32,7 @@
     border-radius: 0;
   }
 
-/* 
+/*
    Positioning
    ========================================================================== */
 
@@ -58,7 +58,7 @@
   position: relative;
 }
 
-/* 
+/*
    Message List
    ========================================================================== */
 
@@ -98,6 +98,20 @@
     }
 
     /* Avatar */
+    .gi-chat .gi-avatar {
+      overflow: hidden;
+      width: 25px;
+      height: 21px;
+      border-radius: 2px;
+    }
+
+    .gi-chat .gi-avatar .gi-avatar-img {
+      background: #f5f5f5;
+      width: 25px;
+      height: 25px;
+      vertical-align: inherit; /* Overrides breaking style in bootstrap */
+    }
+
     .gi-chat .gi-color {
       position: relative;
       display: inline-block;
@@ -150,11 +164,17 @@
       font-size: 12px;
     }
 
+    .gi-chat .gi-text .gi-image {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
 
-/* 
+
+/*
   Message Form
   ========================================================================== */
-    
+
 .gi-chat .gi-message-form {
   padding: 6px;
   background: #e7e7e7;
@@ -181,7 +201,7 @@
       outline: none;
       box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
     }
-  
+
   .gi-chat .gi-message-form button {
     display: block;
     float: left;
@@ -214,7 +234,7 @@
       outline: none;
     }
 
-/* 
+/*
    Collapse Toggle
    ========================================================================== */
 
@@ -228,7 +248,7 @@
   background: url('images/transparent.png');
   background: rgba(0,0,0,.7);
 }
-  
+
   .gi-chat .gi-collapse {
     display: block;
     position: absolute;
@@ -261,7 +281,7 @@
     display: none;
   }
 
-/* 
+/*
    Helpers
    ========================================================================== */
 
