@@ -41,7 +41,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var defaultOpts = {
   room: null,
-  collapsed: false,
+  collapsed: null, // The collapse logic will later make this a false default
   position: 'right',
   container: null,
   truncateLength: 10,
@@ -91,17 +91,22 @@ module.exports = Chat;
 
   this._room = validOpts.room;
   this._messageExpiry = validOpts.messageExpiry;
+  this._collapseKey = this._room.self().key(WIDGET_NAMESPACE).key('collapsed');
 
   this._chatUI = null;
   this._isBound = false;
 
   this._userCache = new UserCache(this._room);
-  this._view = new View(this._userCache, validOpts);
+  this._view = new View(this._userCache, this._collapseKey, validOpts);
 
   _.bindAll(this, [
     '_getMessages',
     '_handleNewMessage',
     '_messageHandler'
+  ]);
+
+  _.bindAll(this._view, [
+    'initialize'
   ]);
 }
 
@@ -112,10 +117,8 @@ Chat.prototype.initialize = function(cb) {
 
   this._messagesKey = this._room.key(WIDGET_NAMESPACE + '/messages');
 
-  this._view.initialize();
-  this._chatUI = this._view.getUI();
-
   var tasks = [
+    this._view.initialize,
     _.bind(this._userCache.initialize, this._userCache),
     this._getMessages
   ];
@@ -132,6 +135,8 @@ Chat.prototype.initialize = function(cb) {
       return;
     }
 
+    self._chatUI = self._view.getUI();
+
     binder.on(self._chatUI.collapseBtn, 'click', self._view.toggleCollapse);
     binder.on(self._chatUI.messageInput, 'keydown', self._handleNewMessage);
     binder.on(self._chatUI.messageBtn, 'click', self._handleNewMessage);
@@ -144,6 +149,8 @@ Chat.prototype.initialize = function(cb) {
     };
 
     self._messagesKey.on('set', opts);
+
+    self._view.append();
 
     return cb(null, self);
   });
@@ -177,6 +184,10 @@ Chat.prototype.sendMessage = function(text, cb) {
 
     cb(null);
   });
+};
+
+Chat.prototype._bindListeners = function() {
+
 };
 
 Chat.prototype._handleNewMessage = function(event) {
