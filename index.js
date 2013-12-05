@@ -55,9 +55,10 @@ var DISPLAY_NAME_REGEX = /\/displayName$/;
 var AVATAR_URL_REGEX = /\/avatarUrl$/;
 var MESSAGE_KEY_REGEX = /^\/messages\/\d+_\d+$/;
 
+var KEY_NAMESPACE = 'goinstant/widgets/chat';
+
 var defaultOpts = {
   room: null,
-  collapsed: false,
   position: 'right',
   container: null,
   truncateLength: 10,
@@ -119,8 +120,13 @@ module.exports = Chat;
   this._messageInput = null;
   this._messageBtn = null;
   this._isBound = false;
+  this._userKey = this._room.self();
 
   this._userCache = new UserCache(this._room);
+
+  _.bindAll(this._userCache, [
+    'initialize'
+  ]);
 
   _.bindAll(this, [
     '_handleCollapseToggle',
@@ -130,38 +136,42 @@ module.exports = Chat;
 }
 
 Chat.prototype.initialize = function(cb) {
+  var self = this;
+
   if (!cb || !_.isFunction(cb)) {
     throw errors.create('initialize', 'INVALID_CALLBACK');
   }
-  // Append markup
-  this._append();
+  this._getCollapseStatus(function() {
 
-  this._messagesKey = this._room.key('/messages');
+    // Append markup
+    self._append();
 
-  var tasks = [
-    _.bind(this._userCache.initialize, this._userCache),
-    this._getMessages
-  ];
+    self._messagesKey = self._room.key('/messages');
 
-  var self = this;
+    var tasks = [
+      self._userCache.initialize,
+      self._getMessages
+    ];
 
-  async.series(tasks, function(err) {
-    if (err) {
-      self.destroy(function() {
-        // Ignore destroy errors here since we're erroring anyway.
-        return cb(err);
-      });
+    async.series(tasks, function(err) {
+      if (err) {
+        self.destroy(function() {
+          // Ignore destroy errors here since we're erroring anyway.
+          return cb(err);
+        });
 
-      return;
-    }
+        return;
+      }
 
-    // Bind click event to collapse toggle.
-    Binder.on(self._collapseBtn, 'click', self._handleCollapseToggle);
+      // Bind click event to collapse toggle.
+      Binder.on(self._collapseBtn, 'click', self._handleCollapseToggle);
 
-    self._isBound = true;
+      self._isBound = true;
 
-    return cb(null, self);
+      return cb(null, self);
+    });
   });
+
 };
 
 Chat.prototype._append = function() {
@@ -215,14 +225,35 @@ Chat.prototype._collapse = function(toggle) {
 
     this._collapsed = true;
 
-  } else {
+    this._userKey.key(KEY_NAMESPACE).key('collapsed').set(this._collapsed);
+
+  } else if (toggle === false) {
     classes(this._chatWrapper).remove(COLLAPSED_CLASS);
     classes(this._collapseBtn).remove(COLLAPSED_CLASS);
 
     this._collapsed = false;
 
+    this._userKey.key(KEY_NAMESPACE).key('collapsed').set(this._collapsed);
+
     this._scrollChatToBottom();
+  } else {
+    this._collapsed = false;
   }
+
+};
+
+Chat.prototype._getCollapseStatus = function(cb) {
+  var self = this;
+  if (this._collapsed === true || this._collapsed === false) {
+    return cb();
+  }
+  this._userKey.key(KEY_NAMESPACE).key('collapsed').get(function(err, val) {
+    if (val === null) {
+      val = false;
+    }
+    self._collapsed = val;
+    cb();
+  });
 };
 
 function generateMessageId() {
