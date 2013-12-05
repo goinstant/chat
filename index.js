@@ -186,10 +186,6 @@ Chat.prototype.sendMessage = function(text, cb) {
   });
 };
 
-Chat.prototype._bindListeners = function() {
-
-};
-
 Chat.prototype._handleNewMessage = function(event) {
   // Only accept these
   var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
