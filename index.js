@@ -172,11 +172,10 @@ Chat.prototype.sendMessage = function(text, cb) {
       return cb(err);
     }
 
-    self._view.appendMessage(message, function() {
-      self._chatUI.messageInput.value = '';
+    self._view.appendMessage(message);
+    self._chatUI.messageInput.value = '';
 
-      cb(null);
-    });
+    cb(null);
   });
 };
 
@@ -214,18 +213,16 @@ Chat.prototype._getMessages = function(cb) {
     // sort by time
     var messages = _.sortBy(value, function(v, k) { return k; }).reverse();
 
-    async.eachSeries(messages, self._view.prependMessage, function(msg) {
-      cb();
-    });
+    _.each(messages, self._view.prependMessage);
+
+    cb(null);
   });
 };
 
 Chat.prototype._messageHandler = function(value, context) {
   // Only accept message keys: /messages/integer_integer
   if (MESSAGE_KEY_REGEX.test(context.key)) {
-    this._view.appendMessage(value, function() {
-
-    });
+    this._view.appendMessage(value);
   }
 };
 
