@@ -178,7 +178,6 @@ describe('View', function() {
 
     it('creates a message with links', function() {
       // Stub out the $_handleImg method, we dont care about images here.
-
       testView._validateImage = sinon.stub().yields();
 
       var fakeMessage = {
