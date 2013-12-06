@@ -89,10 +89,11 @@ describe('View', function() {
     messageExpiry: null
   };
 
-  describe('#initialize', function() {
+  describe('#initialize & #append', function() {
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
+      testView.append();
     });
 
     afterEach(function() {
@@ -115,7 +116,7 @@ describe('View', function() {
     var $messages;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
 
       $chat = $('gi-chat');
@@ -172,8 +173,9 @@ describe('View', function() {
     var fakeMessage;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
+      testView.append();
 
       $messages = $('.gi-chat .gi-message-list');
 
@@ -230,7 +232,7 @@ describe('View', function() {
     var fakeImageEl;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
 
       fakeImageEl = document.createElement('div');
@@ -297,7 +299,7 @@ describe('View', function() {
 
   describe('url regex', function() {
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
     });
 
@@ -376,7 +378,7 @@ describe('View', function() {
 
   describe('#destroy', function() {
     beforeEach(function() {
-      testView = new View(mockUserCache, fakeDefaults);
+      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
       testView.initialize();
     });
 
