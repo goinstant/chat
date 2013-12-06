@@ -31,7 +31,9 @@
     "sinon": "~1.7.3",
     "wrench": "~1.5.1",
     "winston": "~0.7.2",
-    "underscore.string": "2.3.3"
+    "underscore.string": "2.3.3",
+    "widget-examples": "git://github.com/goinstant/widget-examples.git",
+    "xregexp": "v2.0.0"
   },
   "goinstant": {
     "namespace": "widgets"

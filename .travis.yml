@@ -1,9 +1,9 @@
 node_js:
-- "0.10"
-env:
-  global:
-  - secure: e2E7k+Pj/bMtnegRoJBF/JGycEsTatR0LyhFiraWv6bppeqH5v2pCXIqaLwnNhxVuVsHW9J3ZPcu+s0GgjdCTXdVMy5u/fvp+ofOzatPzso7TEThVE3Fdqctg+h6EjLk8bmlKFwJ2kN39yxth8X4oJaLmBqCpETXSmLIiYm7TKY=
-  - secure: B7+1uG9zPLJvHPw8c3lxxcgHdCD5m4mDSp07sMLO7IVngOkGaqFDqax0AbjpT8WABpLq4EfNcAI310h+s0gxV+jHOKxvkFKzKQ2kUdzMJBtBpkxnrHOhblV6Va3iRTy2J9HgzHlPxyCyUWnaDHg8HcWMJZNX0NLYXxzfCeJxp/g=
+- '0.10'
 language: node_js
 before_script:
 - npm install -g grunt-cli
+env:
+  global:
+  - secure: loFVFkNTgXSWegkMTj9aqlj8A77/78MGKj4i46QE5MigcgW/LUl1HC+ot0d5Op//g6Guqz28H6V09lp/vDX9eNsFgIDB5iL2RZfANHF0cR9rlQWMKexX+m2pFq42/0bHYodUmyLG0qGDcXbejD0hZiHZ4PrEahPZnBjmNveeOxk=
+  - secure: Rzo1/1bIsQ6qjBfm7FEE0aaZUGeulg6zftrgpxiyLjuPq7yjQQhraUOA5HEWX46ByuBkVLq3f5N219p+dHHk/wxV+bsM4O/yxr5z8j+h1uCwa4YdzE5xsz7ZTFBAxSspT/2nS8l5RF+GwFNPK1Bag3zJc38Ozu6byIswDUxppBk=
