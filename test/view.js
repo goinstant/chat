@@ -53,7 +53,14 @@ describe('View', function() {
 
   fakeLocalUser = {
     id: 'local-1234',
-    displayName: 'Me'
+    displayName: 'Me',
+    goinstant: {
+      widgets: {
+        chat: {
+          collapsed: false
+        }
+      }
+    }
   };
 
   fakeLocalUser[colors.USER_PROPERTY] = palette.shift();
@@ -81,7 +88,7 @@ describe('View', function() {
 
   fakeDefaults = {
     room: null,
-    collapsed: false,
+    collapsed: null,
     position: 'right',
     container: null,
     truncateLength: 10,
@@ -90,10 +97,11 @@ describe('View', function() {
   };
 
   describe('#initialize & #append', function() {
+
+    var spyCollapse;
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
-      testView.initialize();
-      testView.append();
+      testView = new View(mockUserCache, fakeDefaults);
+      spyCollapse = sinon.spy(testView, '_setCollapse');
     });
 
     afterEach(function() {
@@ -101,6 +109,9 @@ describe('View', function() {
     });
 
     it('appends the widget to the DOM', function() {
+      testView.initialize();
+      testView.append();
+
       var $chat = $('.gi-chat');
       var $collapseWrapper = $chat.children().eq(0);
       var $chatWrapper = $chat.children().eq(1);
@@ -109,6 +120,29 @@ describe('View', function() {
       assert.equal($collapseWrapper.length, 1);
       assert.equal($chatWrapper.length, 1);
     });
+
+    it('appends with collapseStatus from userCache', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = true;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, true);
+    });
+    it('appends with collapseStatus from collapsed param', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = true;
+      testView._collapsed = false;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, false);
+    });
+    it('appends with collapseStatus false by default', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = null;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, false);
+    });
   });
 
   describe('#_createMessage', function() {
@@ -116,7 +150,7 @@ describe('View', function() {
     var $messages;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
+      testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
 
       $chat = $('gi-chat');
@@ -173,7 +207,7 @@ describe('View', function() {
     var fakeMessage;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
+      testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
       testView.append();
 
@@ -232,7 +266,7 @@ describe('View', function() {
     var fakeImageEl;
 
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
+      testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
 
       fakeImageEl = document.createElement('div');
@@ -299,7 +333,7 @@ describe('View', function() {
 
   describe('url regex', function() {
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
+      testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
     });
 
@@ -378,7 +412,7 @@ describe('View', function() {
 
   describe('#destroy', function() {
     beforeEach(function() {
-      testView = new View(mockUserCache, createFakeKey(), fakeDefaults);
+      testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
     });
 

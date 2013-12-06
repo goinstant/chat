@@ -48,7 +48,7 @@ describe('Chat Widget', function() {
   };
 
   mockView = {
-    initialize: sinon.stub().yields(),
+    initialize: sinon.stub(),
     append: sinon.stub(),
     destroy: sinon.stub(),
     getUI: sinon.stub().returns(fakeUI),
