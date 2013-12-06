@@ -32,7 +32,8 @@ describe('Chat Widget', function() {
   }
 
   fakeRoom = {
-    key: createFakeKey
+    key: createFakeKey,
+    self: createFakeKey
   };
 
   mockUserCache = {
