@@ -128,6 +128,7 @@ describe('View', function() {
       sinon.assert.calledOnce(spyCollapse);
       sinon.assert.calledWith(spyCollapse, true);
     });
+
     it('appends with collapseStatus from collapsed param', function() {
       fakeLocalUser.goinstant.widgets.chat.collapsed = true;
       testView._collapsed = false;
@@ -136,6 +137,7 @@ describe('View', function() {
       sinon.assert.calledOnce(spyCollapse);
       sinon.assert.calledWith(spyCollapse, false);
     });
+
     it('appends with collapseStatus false by default', function() {
       fakeLocalUser.goinstant.widgets.chat.collapsed = null;
       testView.initialize();
