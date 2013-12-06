@@ -100,8 +100,8 @@ module.exports = Chat;
 
   _.bindAll(this, [
     '_getMessages',
-    '_handleNewMessage',
-    '_messageHandler'
+    '_sendMessage',
+    '_recieveMessage'
   ]);
 
   _.bindAll(this._view, [
@@ -150,7 +150,7 @@ Chat.prototype.initialize = function(cb) {
 
     var opts = {
       bubble: true,
-      listener: self._messageHandler
+      listener: self._recieveMessage
     };
 
     self._messagesKey.on('set', opts);
