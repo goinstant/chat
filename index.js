@@ -84,7 +84,6 @@ module.exports = Chat;
   }
 
   var validOpts = _.defaults(opts, defaultOpts);
-  console.log(validOpts);
 
   this._room = validOpts.room;
   this._messageExpiry = validOpts.messageExpiry;
