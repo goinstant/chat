@@ -88,7 +88,6 @@ module.exports = Chat;
 
   this._room = validOpts.room;
   this._messageExpiry = validOpts.messageExpiry;
-  this._collapseKey = this._room.self().key(WIDGET_NAMESPACE).key('collapsed');
 
   this._chatUI = null;
   this._isBound = false;
