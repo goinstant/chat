@@ -38,6 +38,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var defaultOpts = {
   room: null,
+  collapsed: null, // The collapse logic will later make this a false default
   position: 'right',
   container: null,
   truncateLength: 10,
