@@ -12,6 +12,7 @@
     "component/classes": "1.1.4",
     "component/trim": "0.0.1",
     "caolan/async": "f01b3992fbe7aa2f4881152143608ad666aea1cc",
+    "moment/moment": "2.4.0",
     "goinstant/usercache": "v1.0.0",
     "goinstant/colors-common": "v1.0.0",
     "goinstant/secure-filters": "v1.0.4"
