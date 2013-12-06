@@ -120,7 +120,7 @@ Chat.prototype.initialize = function(cb) {
     throw errors.create('initialize', 'INVALID_CALLBACK');
   }
 
-  this._messagesKey = this._room.key(WIDGET_NAMESPACE + '/messages');
+  this._messagesKey = this._room.key(WIDGET_NAMESPACE).key('messages');
 
   var tasks = [
     this._view.initialize,
