@@ -100,7 +100,7 @@ module.exports = Chat;
 
   _.bindAll(this, [
     '_getMessages',
-    '_sendMessage',
+    '_keyDown',
     '_recieveMessage'
   ]);
 
