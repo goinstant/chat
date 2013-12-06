@@ -9495,7 +9495,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var defaultOpts = {
   room: null,
-  collapsed: null, // The collapse logic will later make this a false default
+  collapsed: false,
   position: 'right',
   container: null,
   truncateLength: 10,
@@ -9545,7 +9545,6 @@ module.exports = Chat;
 
   this._room = validOpts.room;
   this._messageExpiry = validOpts.messageExpiry;
-  this._collapseKey = this._room.self().key(WIDGET_NAMESPACE).key('collapsed');
 
   this._chatUI = null;
   this._isBound = false;
@@ -9553,16 +9552,12 @@ module.exports = Chat;
   this._binder = binder;
 
   this._userCache = new UserCache(this._room);
-  this._view = new View(this._userCache, this._collapseKey, validOpts);
+  this._view = new View(this._userCache, validOpts);
 
   _.bindAll(this, [
     '_getMessages',
     '_keyDown',
     '_recieveMessage'
-  ]);
-
-  _.bindAll(this._view, [
-    'initialize'
   ]);
 }
 
@@ -9579,8 +9574,10 @@ Chat.prototype.initialize = function(cb) {
 
   this._messagesKey = this._room.key(WIDGET_NAMESPACE).key('messages');
 
+  this._view.initialize();
+  this._chatUI = this._view.getUI();
+
   var tasks = [
-    this._view.initialize,
     _.bind(this._userCache.initialize, this._userCache),
     this._getMessages
   ];
@@ -9597,8 +9594,6 @@ Chat.prototype.initialize = function(cb) {
       return;
     }
 
-    self._chatUI = self._view.getUI();
-
     self._binder.on(self._chatUI.collapseBtn, 'click', self._view.toggleCollapse);
     self._binder.on(self._chatUI.messageInput, 'keydown', self._keyDown);
     self._binder.on(self._chatUI.messageBtn, 'click', self._keyDown);
@@ -9611,8 +9606,6 @@ Chat.prototype.initialize = function(cb) {
     };
 
     self._messagesKey.on('set', opts);
-
-    self._view.append();
 
     return cb(null, self);
   });
@@ -9843,9 +9836,8 @@ module.exports = View;
 /**
  * @constructor
  */
-function View(userCache, collapseKey, options) {
+function View(userCache, options) {
   this._userCache = userCache;
-  this._collapseKey = collapseKey;
 
   this._collapsed = options.collapsed;
   this._position = options.position;
@@ -9874,11 +9866,7 @@ function View(userCache, collapseKey, options) {
  * Initializes the chat view
  * @public
  */
-View.prototype.initialize = function(cb) {
-  var self = this;
-
-  cb = cb || function(){};
-
+View.prototype.initialize = function() {
   this._wrapper = document.createElement('div');
   this._wrapper.setAttribute('class', WRAPPER_CLASS + ' ' + OVERRIDE_CLASS);
 
@@ -9888,34 +9876,7 @@ View.prototype.initialize = function(cb) {
   this._messageList = this._wrapper.querySelector('.' + MESSAGE_LIST_CLASS);
   this._messageInput = this._wrapper.querySelector('.' + MESSAGE_INPUT_CLASS);
   this._messageBtn = this._wrapper.querySelector('.' + MESSAGE_BTN_CLASS);
-  this._collapseBtn = this._wrapper.querySelector('.' + COLLAPSE_BTN_CLASS);
 
-  // Pass the position either default or user set as a class
-  if (!this._container && this._position === 'right') {
-    classes(this._wrapper).add(ALIGN_RIGHT_CLASS);
-
-  } else if (!this._container) {
-    classes(this._wrapper).add(ALIGN_LEFT_CLASS);
-  }
-
-  // If the collapsed param is specified, we use it, otherwise
-  // get the collapse key and use its value
-  if (this._collapsed === true || this._collapsed === false) {
-    this._setCollapse(this._collapsed);
-    cb();
-  } else {
-    this._collapseKey.get(function(err, val) {
-      // If the value is null, we default to false
-      if (val === null) {
-        val = false;
-      }
-      self._setCollapse(val);
-      cb();
-    });
-  }
-};
-
-View.prototype.append = function() {
   // Check if user passed a container and if so, append user list to it
   if (this._container) {
     this._container.appendChild(this._wrapper);
@@ -9926,6 +9887,19 @@ View.prototype.append = function() {
     document.body.appendChild(this._wrapper);
 
     classes(this._wrapper).add(ANCHOR_CLASS);
+  }
+
+  this._collapseBtn = this._wrapper.querySelector('.' + COLLAPSE_BTN_CLASS);
+
+  // Check if user passed the option for collapsed on load
+  this._setCollapse(this._collapsed);
+
+  // Pass the position either default or user set as a class
+  if (!this._container && this._position === 'right') {
+    classes(this._wrapper).add(ALIGN_RIGHT_CLASS);
+
+  } else if (!this._container) {
+    classes(this._wrapper).add(ALIGN_LEFT_CLASS);
   }
 };
 
@@ -9973,8 +9947,6 @@ View.prototype._setCollapse = function(toggle) {
 
     this._scrollChatToBottom();
   }
-
-  this._collapseKey.set(this._collapsed);
 };
 
 /**
@@ -10183,10 +10155,9 @@ View.prototype._scrollChatToBottom = function() {
  * @public
  */
 View.prototype.destroy = function() {
-  if (document.body.querySelector('.' + CHAT_WRAPPER_CLASS)) {
-    this._wrapper.parentNode.removeChild(this._wrapper);
-  }
+
   if (this._wrapper) {
+    this._wrapper.parentNode.removeChild(this._wrapper);
     this._wrapper = null;
   }
 };
