@@ -31,9 +31,6 @@ var TAB = 9;
 
 var MESSAGE_KEY_REGEX = /^\/goinstant\/widgets\/chat\/messages\/\d+_\d+$/;
 
-/**
- * Valid Opts
- */
 var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
                      'truncateLength', 'avatars', 'messageExpiry'];
 
@@ -96,6 +93,8 @@ module.exports = Chat;
   this._chatUI = null;
   this._isBound = false;
 
+  this._binder = binder;
+
   this._userCache = new UserCache(this._room);
   this._view = new View(this._userCache, this._collapseKey, validOpts);
 
@@ -110,6 +109,12 @@ module.exports = Chat;
   ]);
 }
 
+/**
+ * Initializes the chat widget
+ * @public
+ * @param {function} cb A callback function called when initialization completes
+ *                      or errors.
+ */
 Chat.prototype.initialize = function(cb) {
   if (!cb || !_.isFunction(cb)) {
     throw errors.create('initialize', 'INVALID_CALLBACK');
@@ -137,9 +142,9 @@ Chat.prototype.initialize = function(cb) {
 
     self._chatUI = self._view.getUI();
 
-    binder.on(self._chatUI.collapseBtn, 'click', self._view.toggleCollapse);
-    binder.on(self._chatUI.messageInput, 'keydown', self._handleNewMessage);
-    binder.on(self._chatUI.messageBtn, 'click', self._handleNewMessage);
+    self._binder.on(self._chatUI.collapseBtn, 'click', self._view.toggleCollapse);
+    self._binder.on(self._chatUI.messageInput, 'keydown', self._keyDown);
+    self._binder.on(self._chatUI.messageBtn, 'click', self._keyDown);
 
     self._isBound = true;
 
@@ -156,11 +161,13 @@ Chat.prototype.initialize = function(cb) {
   });
 };
 
-function generateMessageId() {
-  return new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
-}
-
-Chat.prototype.sendMessage = function(text, cb) {
+/**
+ * Sends the message through GoInstant
+ * @private
+ * @param {string} text The message text
+ * @param {function} cb A callback function to call when message sends
+ */
+Chat.prototype._sendMessage = function(text, cb) {
 
   var message = {};
 
@@ -186,7 +193,12 @@ Chat.prototype.sendMessage = function(text, cb) {
   });
 };
 
-Chat.prototype._handleNewMessage = function(event) {
+/**
+ * Handles keydowns on the message input and button
+ * @private
+ * @param {object} event The event object
+ */
+Chat.prototype._keyDown = function(event) {
   // Only accept these
   var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
   var isValidClick = event.type === 'click';
@@ -200,13 +212,19 @@ Chat.prototype._handleNewMessage = function(event) {
     return;
   }
 
-  this.sendMessage(this._chatUI.messageInput.value, function(err) {
+  this._sendMessage(this._chatUI.messageInput.value, function(err) {
     if (err) {
       return;
     }
   });
 };
 
+/**
+ * Gets all messages stored in GoInstant
+ * @private
+ * @param {function} cb A callback function to call after all messages have
+ *                      been retreived and rendered
+ */
 Chat.prototype._getMessages = function(cb) {
 
   var self = this;
@@ -226,28 +244,49 @@ Chat.prototype._getMessages = function(cb) {
   });
 };
 
-Chat.prototype._messageHandler = function(value, context) {
+/**
+ * Handles recieving a new message from GoInstant
+ * @private
+ * @param {object} value The message data object
+ * @param {object} context The GoInstant context object
+ */
+Chat.prototype._recieveMessage = function(value, context) {
   // Only accept message keys: /messages/integer_integer
   if (MESSAGE_KEY_REGEX.test(context.key)) {
     this._view.appendMessage(value);
   }
 };
 
+/**
+ * Destroys the chat widget
+ * @public
+ * @param cb A callback function to call when destroy is complete
+ */
 Chat.prototype.destroy = function(cb) {
   if (!cb || !_.isFunction(cb)) {
     throw errors.create('destroy', 'INVALID_CALLBACK');
   }
 
   if (this._isBound) {
-    binder.on(this._chatUI.collapseBtn, 'click', this._handleCollapseToggle);
-    binder.on(this._chatUI.messageInput, 'keydown', this._handleNewMessage);
-    binder.on(this._chatUI.messageBtn, 'click', this._handleNewMessage);
+    this._binder.off(this._chatUI.collapseBtn, 'click', this._view.toggleCollapse);
+    this._binder.off(this._chatUI.messageInput, 'keydown', this._keyDown);
+    this._binder.off(this._chatUI.messageBtn, 'click', this._keyDown);
 
     this._isBound = false;
   }
 
-  this._messagesKey.off('set', this._messageHandler);
+  this._messagesKey.off('set', this._recieveMessage);
   this._view.destroy();
 
   this._userCache.destroy(cb);
 };
+
+/**
+ * Generates a unique message ID
+ * @private
+ * @returns id A unique ID
+ */
+function generateMessageId() {
+  var id = new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
+  return id;
+}

@@ -3,7 +3,7 @@
 ## [Chat Widget](https://developers.goinstant.com/v1/widgets/chat.html)
 
 The [GoInstant](https://goinstant.com) Chat [widget](https://developers.goinstant.com/v1/widgets/index.html)
---------- ... Description Goes Here---------
+provides real-time messaging inside a room of your application.
 
 ![Chat](chat.png)
 

@@ -155,13 +155,23 @@
     }
 
     /* Text */
-    .gi-chat .gi-text {
+    .gi-chat .gi-text,
+    .gi-chat .gi-images {
       display: block;
       width: auto;
       margin: -3px 20px 0 0;
       padding: 0 0 10px 37px;
       line-height: 1.25;
       font-size: 12px;
+      word-wrap: break-word;
+    }
+
+    .gi-chat .gi-images .gi-image {
+      max-height: 100%;
+      max-width: 100%;
+      height: auto;
+      width: auto;
+      margin-top: 10px;
     }
 
     .gi-chat .gi-text .gi-image {

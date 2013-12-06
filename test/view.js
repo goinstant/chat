@@ -49,14 +49,14 @@ describe('View', function() {
     };
   }
 
-  var pallet = colors.DEFAULTS;
+  var palette = colors.DEFAULTS;
 
   fakeLocalUser = {
     id: 'local-1234',
     displayName: 'Me'
   };
 
-  fakeLocalUser[colors.USER_PROPERTY] = pallet.shift();
+  fakeLocalUser[colors.USER_PROPERTY] = palette.shift();
 
   fakeUsers = [
     {
@@ -66,7 +66,7 @@ describe('View', function() {
   ];
 
   _.each(fakeUsers, function(user, index) {
-    user[colors.USER_PROPERTY] = pallet[index];
+    user[colors.USER_PROPERTY] = palette[index];
   });
 
   mockUserCache = {
@@ -110,10 +110,6 @@ describe('View', function() {
     });
   });
 
-  describe('pre/append message', function() {
-
-  });
-
   describe('#_createMessage', function() {
     var $chat;
     var $messages;
@@ -147,7 +143,8 @@ describe('View', function() {
 
     it('creates a message with links', function() {
       // Stub out the $_handleImg method, we dont care about images here.
-      testView._handleImg = sinon.stub();
+
+      testView._validateImage = sinon.stub().yields();
 
       var fakeMessage = {
         id: 123123123,
@@ -168,70 +165,132 @@ describe('View', function() {
       assert.equal($textContents.get(3).nodeType, linkType);
       assert.equal($textContents.get(4).nodeType, textType);
     });
-
-    it('creates a message with images', function() {
-      // Mock out the #_handleImg method so we can assert that the image gets
-      // added to the message correct
-      var fakeImg = document.createElement('img');
-      fakeImg.src = 'https://pbs.twimg.com/profile_images/1539812195/400x400-' +
-                    'GoInstant_bigger.png';
-
-
-      var mockHandleImg = sinon.stub().yields(null, fakeImg);
-
-      testView._handleImg = mockHandleImg;
-
-      var fakeMessage = {
-        id: 123123123,
-        text: 'check this out https://pbs.twimg.com/profile_images/15398121' +
-              '95/400x400-GoInstant_bigger.png',
-        user: fakeUsers[0]
-      };
-
-      var $el = $(testView._createMessage(fakeMessage));
-      var $textContents = $el.find('.gi-text').contents();
-
-      var textType = 3;
-      var linkType = 1;
-
-      assert.equal($textContents.length, 4);
-      assert.equal($textContents.get(0).nodeType, textType);
-      assert.equal($textContents.get(1).nodeType, linkType);
-      assert.equal($textContents.get(2).nodeType, textType);
-
-      assert.equal($textContents.get(3), fakeImg);
-    });
   });
 
-  describe('#_handleImg', function() {
-   beforeEach(function() {
+  describe('pre/append message', function() {
+    var $messages;
+    var fakeMessage;
+
+    beforeEach(function() {
       testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
+
+      $messages = $('.gi-chat .gi-message-list');
+
+      fakeMessage = {
+        id: 123123123,
+        text: 'this is only a test',
+        user: fakeUsers[0]
+      };
     });
 
     afterEach(function() {
       testView.destroy();
     });
 
-    it('passes back null for invalid img url', function(done) {
-      var url = 'www.goinstant.com/blog';
+    it('appends the message to the view', function() {
+      testView.appendMessage(fakeMessage);
+      testView.appendMessage(fakeMessage);
 
-      testView._handleImg(url, function(err, img) {
+      var newFakeMessage = _.clone(fakeMessage);
+      newFakeMessage.id = '99999';
 
-        assert.isNull(img);
+      testView.appendMessage(newFakeMessage);
+
+      var $lastMessage = $messages.children().last();
+      assert.equal($lastMessage.attr('data-goinstant-id'), newFakeMessage.id);
+    });
+
+    it('prepends the message to the view', function() {
+      testView.appendMessage(fakeMessage);
+      testView.appendMessage(fakeMessage);
+
+      var newFakeMessage = _.clone(fakeMessage);
+      newFakeMessage.id = '99999';
+
+      testView.prependMessage(newFakeMessage);
+
+      var $lastMessage = $messages.children().first();
+      assert.equal($lastMessage.attr('data-goinstant-id'), newFakeMessage.id);
+    });
+
+    it('#prependMessage appends the message if view is empty', function() {
+      var newFakeMessage = _.clone(fakeMessage);
+      newFakeMessage.id = '99999';
+
+      testView.prependMessage(newFakeMessage);
+
+      var $message = $messages.children().first();
+
+      assert.equal($message.attr('data-goinstant-id'), newFakeMessage.id);
+    });
+  });
+
+  describe('#_validateImage', function() {
+    var fakeImageEl;
+
+    beforeEach(function() {
+      testView = new View(mockUserCache, fakeDefaults);
+      testView.initialize();
+
+      fakeImageEl = document.createElement('div');
+      document.body.appendChild(fakeImageEl);
+    });
+
+    afterEach(function() {
+      fakeImageEl.parentNode.removeChild(fakeImageEl);
+      testView.destroy();
+    });
+
+    it('does not add image with invalid URL to DOM', function(done) {
+      this.timeout(6000);
+
+      var url = 'http://www.goinstant.com/blog';
+
+      testView._validateImage(fakeImageEl, url, function() {
+
+        var img = $(fakeImageEl).children().first();
+        assert.equal(img.length, 0);
         done();
       });
     });
 
-    it('passes back new <img> for a valid img url', function(done) {
+    it('adds image with valid URL to DOM', function(done) {
+      this.timeout(6000);
+
       var url = 'https://pbs.twimg.com/profile_images/1539812195/400x400-' +
                     'GoInstant_bigger.png';
 
-      testView._handleImg(url, function(err, img) {
+      testView._validateImage(fakeImageEl, url, function() {
 
-        assert.equal(img.tagName, 'IMG');
-        assert.equal(img.src, url);
+        var img = $(fakeImageEl).children().first();
+        assert.equal(img.length, 1);
+        assert.equal(img.attr('src'), url);
         done();
+      });
+    });
+
+    it('adds image that has already been cached', function(done) {
+      this.timeout(6000);
+
+      var url = 'https://pbs.twimg.com/profile_images/1539812195/400x400-' +
+                    'GoInstant_bigger.png';
+
+      var $images = $(fakeImageEl);
+      testView._validateImage(fakeImageEl, url, function() {
+
+        var $imgEls = $images.children();
+        assert.equal($imgEls.length, 1);
+        assert.equal($imgEls.last().attr('src'), url);
+
+        testView._validateImage(fakeImageEl, url, function() {
+
+          $imgEls = $images.children();
+          assert.equal($imgEls.length, 2);
+          assert.equal($imgEls.last().attr('src'), url);
+
+          done();
+        });
       });
     });
   });
@@ -288,7 +347,7 @@ describe('View', function() {
         'http://3rosnah.ads4blog.net/daily-bop-sessions',
         'http://www.gonikeblazers.com/blog/running-shoes-nike-free-run-2',
         'http://www.gonikeblazers.com/blog/multi-angle-attack-released-2011-nike-all-star-color-shoes',
-        'http://karaworld.little-pluto.hu/?page_id=57',
+        'http://karaworld.little-pluto.hu/?page_id=57'
       ];
 
       var invalidUrls = [
@@ -330,98 +389,3 @@ describe('View', function() {
   });
 
 });
-  /*
-  describe('send message', function() {
-    var sandbox;
-
-    var testChat;
-
-    beforeEach(function() {
-      sandbox = sinon.sandbox.create();
-    });
-
-    afterEach(function() {
-      sandbox.restore();
-    });
-
-    beforeEach(function(done) {
-      sandbox.stub(binder, 'on');
-
-      var options = {
-        room: fakeRoom
-      };
-
-      testChat = new Chat(options);
-      testChat._userCache = mockUserCache;
-
-      testChat.initialize(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        done();
-      });
-    });
-
-    afterEach(function(done) {
-      testChat.destroy(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        done();
-      });
-    });
-
-    describe('add message', function() {
-    beforeEach(function(done) {
-      var options = {
-        room: fakeRoom
-      };
-
-      testChat = new Chat(options);
-      testChat._userCache = mockUserCache;
-      testChat.initialize(done);
-    });
-
-    afterEach(function(done) {
-      var el = document.querySelector('.gi-chat');
-
-      if (!testChat || !el) {
-        return done();
-      }
-
-      testChat.destroy(function(err) {
-        if (err) {
-          return done(err);
-        }
-
-        testChat = null;
-
-        done();
-      });
-    });
-
-    it('adds a message', function(done) {
-      var fakeMessage = {
-        id: 12345,
-        test: 'this is only a test',
-        user: fakeUser
-      };
-
-      var rgb = 'rgb(255, 0, 0)';
-
-      testChat._addMessage(fakeMessage, function() {
-
-        var msgEls = $(testChat._messageList).children();
-
-        assert.equal(msgEls.length, 1);
-        assert.equal(msgEls.eq(0).attr('id'), fakeMessage.id);
-        assert.equal(msgEls.eq(0).attr('title'), fakeUser.displayName);
-        assert.equal(msgEls.eq(0).find('.gi-color').css('background-color'), rgb);
-      done();
-      });
-    });
-  });
-*/
-

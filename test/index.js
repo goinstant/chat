@@ -50,7 +50,8 @@ describe('Chat Widget', function() {
   mockView = {
     initialize: sinon.stub(),
     destroy: sinon.stub(),
-    getUI: sinon.stub().returns(fakeUI)
+    getUI: sinon.stub().returns(fakeUI),
+    toggleCollapse: sinon.stub()
   };
 
   describe('constructor', function() {
@@ -213,9 +214,13 @@ describe('Chat Widget', function() {
       testChat = new Chat(options);
       testChat._userCache = mockUserCache;
       testChat._view = mockView;
+
+      sinon.spy(testChat._binder, 'on');
     });
 
     afterEach(function(done) {
+      testChat._binder.on.restore();
+
       var el = document.querySelector('.gi-chat');
 
       if (!testChat || !el) {
@@ -238,6 +243,39 @@ describe('Chat Widget', function() {
         if (err) {
           return done(err);
         }
+
+        done();
+      });
+    });
+
+    it('successfully binds to DOM', function(done) {
+      testChat.initialize(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        var binder = testChat._binder;
+
+        binder.on.calledWith(
+          testChat._binder.on,
+          testChat._chatUI.collapseBtn,
+          'click',
+          testChat._view.toggleCollapse
+        );
+
+        binder.on.calledWith(
+          testChat._binder.on,
+          testChat._chatUI.messageInput,
+          'keydown',
+          testChat._keyDown
+        );
+
+        binder.on.calledWith(
+          testChat._binder.on,
+          testChat._chatUI.messageBtn,
+          'click',
+          testChat._keyDown
+        );
 
         done();
       });
@@ -268,6 +306,8 @@ describe('Chat Widget', function() {
       testChat._userCache = mockUserCache;
       testChat._view = mockView;
 
+      sinon.spy(testChat._binder, 'off');
+
       testChat.initialize(function(err) {
         if (err) {
           return done(err);
@@ -275,6 +315,10 @@ describe('Chat Widget', function() {
 
         done();
       });
+    });
+
+    afterEach(function() {
+      testChat._binder.off.restore();
     });
 
     it('successfully calls destroy with no error returned', function(done) {
@@ -287,6 +331,38 @@ describe('Chat Widget', function() {
       });
     });
 
+   it('successfully unbinds the DOM', function(done) {
+     var binder = testChat._binder;
+
+      testChat.destroy(function(err) {
+        if (err) {
+          return done(err);
+        }
+
+        binder.off.calledWith(
+          testChat._binder.off,
+          testChat._chatUI.collapseBtn,
+          'click',
+          testChat._view.toggleCollapse
+        );
+
+        binder.off.calledWith(
+          testChat._binder.off,
+          testChat._chatUI.messageInput,
+          'keydown',
+          testChat._keyDown
+        );
+
+        binder.off.calledWith(
+          testChat._binder.off,
+          testChat._chatUI.messageBtn,
+          'click',
+          testChat._keyDown
+        );
+
+        done();
+      });
+    });
   });
 
 });
