@@ -223,7 +223,7 @@ Chat.prototype._keyDown = function(event) {
 Chat.prototype._collapseClick = function() {
   var userKey = this._userCache.getLocalUserKey();
   this._view.toggleCollapse();
-  userKey.key(WIDGET_NAMESPACE).key('collapsed').set(this._view._collapsed);
+  userKey.key(WIDGET_NAMESPACE).key('collapsed').set(this._view.collapsed);
 };
 
 /**
