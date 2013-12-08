@@ -17,6 +17,7 @@ var _ = require('lodash');
 var trim = require('trim');
 
 var UserCache = require('usercache');
+var WidgetIndicators = require('widget-indicators');
 
 var View = require('./lib/view');
 var errors = require('./lib/errors');
@@ -35,6 +36,8 @@ var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
                      'truncateLength', 'avatars', 'messageExpiry'];
 
 var VALID_POSITIONS = ['left', 'right'];
+
+var INDICATOR_TEXT = 'New Message';
 
 var defaultOpts = {
   room: null,
@@ -95,6 +98,7 @@ module.exports = Chat;
   this._binder = binder;
 
   this._userCache = new UserCache(this._room);
+  this._widgetIndicators = null;
   this._view = new View(this._userCache, validOpts);
 
   _.bindAll(this, [
@@ -119,6 +123,13 @@ Chat.prototype.initialize = function(cb) {
 
   this._view.initialize();
   this._chatUI = this._view.getUI();
+
+  var indicatorOptions = {
+    widgetElement: this._chatUI.messageInput,
+    blinkElement: this._chatUI.collapseWrapper
+  };
+
+  this._widgetIndicators = new WidgetIndicators(indicatorOptions);
 
   var tasks = [
     _.bind(this._userCache.initialize, this._userCache),
@@ -247,6 +258,7 @@ Chat.prototype._recieveMessage = function(value, context) {
   // Only accept message keys: /messages/integer_integer
   if (MESSAGE_KEY_REGEX.test(context.key)) {
     this._view.appendMessage(value);
+    this._widgetIndicators.trigger(INDICATOR_TEXT);
   }
 };
 

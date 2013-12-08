@@ -43,7 +43,8 @@ describe('Chat Widget', function() {
   fakeUI = {
     collapseBtn: document.createElement('div'),
     messageInput: document.createElement('input'),
-    messageBtn: document.createElement('button')
+    messageBtn: document.createElement('button'),
+    collapseWrapper: document.createElement('div')
   };
 
   mockView = {

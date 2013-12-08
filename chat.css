@@ -32,6 +32,16 @@
     border-radius: 0;
   }
 
+
+/* Wrapper Blink */
+.gi-chat .gi-collapse-wrapper.gi-widget-blink {
+  background-color: #999999;
+}
+
+.gi-chat .gi-collapse-wrapper.gi-widget-blink .gi-collapse {
+    background-color: #999999;
+  }
+
 /*
    Positioning
    ========================================================================== */
