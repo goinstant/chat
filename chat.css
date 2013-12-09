@@ -75,6 +75,7 @@
 
   /* Message */
   .gi-chat .gi-message-list li {
+    position: relative;
     margin: 0;
     padding: 6px 6px 0;
     overflow: hidden;
@@ -95,6 +96,10 @@
     .gi-chat .gi-message-list li.gi-local-message {
       margin-top: 0;
       background: #FFF;
+    }
+
+    .gi-chat .gi-message-list li.gi-local-message .gi-time {
+      color: #999999;
     }
 
     /* Avatar */
@@ -152,6 +157,13 @@
       font-size: 12px;
       font-weight: 600;
       color: #444;
+    }
+
+    /* Time */
+    .gi-chat .gi-time {
+      float: right;
+      padding: 0px 6px 6px 0px;
+      font-size: 10px;
     }
 
     /* Text */

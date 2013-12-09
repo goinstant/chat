@@ -41,7 +41,7 @@ var defaultOpts = {
   collapsed: null, // The collapse logic will later make this a false default
   position: 'right',
   container: null,
-  truncateLength: 10,
+  truncateLength: 20,
   avatars: true,
   messageExpiry: null
 };
@@ -166,6 +166,7 @@ Chat.prototype._sendMessage = function(text, cb) {
   message.text = _.escape(text);
   message.id = generateMessageId();
   message.user = this._userCache.getLocalUser();
+  message.timestamp = new Date().getTime();
 
   var self = this;
 

@@ -8,6 +8,7 @@ describe('View', function() {
   var async = require('async');
   var _ = require('lodash');
   var $ = require('jquery');
+  var moment = require('moment');
 
   var View = require('chat/lib/view');
 
@@ -167,7 +168,8 @@ describe('View', function() {
       var fakeMessage = {
         id: 123123123,
         text: 'this is only a test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
 
       var $el = $(testView._createMessage(fakeMessage));
@@ -176,6 +178,23 @@ describe('View', function() {
       assert.equal($el.attr('data-goinstant-id'), fakeMessage.id);
       assert.equal($el.find('.gi-name').html(), fakeMessage.user.displayName);
       assert.equal($el.find('.gi-text').html(), fakeMessage.text);
+
+      var formatted = $el.find('.gi-time').text().split(',')[0];
+      assert.isNull(formatted.match('-'));
+    });
+
+    it('creates a message with last week\'s time format', function() {
+      var fakeMessage = {
+        id: 123123123,
+        text: 'this is only a test',
+        user: fakeUsers[0],
+        timestamp: new Date().getTime() - (86400000 * 100)
+      };
+
+      var $el = $(testView._createMessage(fakeMessage));
+
+      var formatted = $el.find('.gi-time').text().split(',')[0];
+      assert.isNotNull(formatted.match('-'));
     });
 
     it('creates a message with links', function() {
@@ -185,7 +204,8 @@ describe('View', function() {
       var fakeMessage = {
         id: 123123123,
         text: 'this is www.google.ca only a http://goinstant.com test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
 
       var $el = $(testView._createMessage(fakeMessage));
@@ -217,7 +237,8 @@ describe('View', function() {
       fakeMessage = {
         id: 123123123,
         text: 'this is only a test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
     });
 
