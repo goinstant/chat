@@ -138,6 +138,13 @@ Chat.prototype.initialize = function(cb) {
 
       self._chatUI = self._view.getUI();
 
+      var indicatorOptions = {
+        widgetElement: self._chatUI.messageInput,
+        blinkElement: self._chatUI.collapseWrapper
+      };
+
+      self._widgetIndicators = new WidgetIndicators(indicatorOptions);
+
       self._binder.on(self._chatUI.collapseBtn, 'click', self._collapseClick);
       self._binder.on(self._chatUI.messageInput, 'keydown', self._keyDown);
       self._binder.on(self._chatUI.messageBtn, 'click', self._keyDown);
