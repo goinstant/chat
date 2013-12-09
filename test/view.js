@@ -132,7 +132,7 @@ describe('View', function() {
 
     it('appends with collapseStatus from collapsed param', function() {
       fakeLocalUser.goinstant.widgets.chat.collapsed = true;
-      testView._collapsed = false;
+      testView.collapsed = false;
       testView.initialize();
 
       sinon.assert.calledOnce(spyCollapse);
