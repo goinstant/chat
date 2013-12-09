@@ -38,7 +38,7 @@ var VALID_POSITIONS = ['left', 'right'];
 
 var defaultOpts = {
   room: null,
-  collapsed: false,
+  collapsed: null, // The collapse logic will later make this a false default
   position: 'right',
   container: null,
   truncateLength: 20,
@@ -100,6 +100,7 @@ module.exports = Chat;
   _.bindAll(this, [
     '_getMessages',
     '_keyDown',
+    '_collapseClick',
     '_recieveMessage'
   ]);
 }
@@ -117,40 +118,38 @@ Chat.prototype.initialize = function(cb) {
 
   this._messagesKey = this._room.key(WIDGET_NAMESPACE).key('messages');
 
-  this._view.initialize();
-  this._chatUI = this._view.getUI();
-
-  var tasks = [
-    _.bind(this._userCache.initialize, this._userCache),
-    this._getMessages
-  ];
-
   var self = this;
-
-  async.series(tasks, function(err) {
+  this._userCache.initialize(function(err) {
     if (err) {
-      self.destroy(function() {
-        // Ignore destroy errors here since we're erroring anyway.
-        return cb(err);
-      });
-
-      return;
+      return cb(err);
     }
 
-    self._binder.on(self._chatUI.collapseBtn, 'click', self._view.toggleCollapse);
-    self._binder.on(self._chatUI.messageInput, 'keydown', self._keyDown);
-    self._binder.on(self._chatUI.messageBtn, 'click', self._keyDown);
+    self._view.initialize();
 
-    self._isBound = true;
+    self._getMessages(function(err) {
+      if (err) {
+        return cb(err);
+      }
 
-    var opts = {
-      bubble: true,
-      listener: self._recieveMessage
-    };
+      self._chatUI = self._view.getUI();
 
-    self._messagesKey.on('set', opts);
+      self._binder.on(self._chatUI.collapseBtn, 'click', self._collapseClick);
+      self._binder.on(self._chatUI.messageInput, 'keydown', self._keyDown);
+      self._binder.on(self._chatUI.messageBtn, 'click', self._keyDown);
 
-    return cb(null, self);
+      self._isBound = true;
+
+      var opts = {
+        bubble: true,
+        listener: self._recieveMessage
+      };
+
+      self._messagesKey.on('set', opts);
+
+      self._view.append();
+
+      return cb(null, self);
+    });
   });
 };
 
@@ -175,7 +174,10 @@ Chat.prototype._sendMessage = function(text, cb) {
     expire: this._messageExpiry
   };
 
-  this._messagesKey.key(message.id).set(message, opts, function(err, value, context) {
+  this._messagesKey.key(message.id).set(
+    message,
+    opts,
+    function(err, value, context) {
     if (err) {
       return cb(err);
     }
@@ -194,7 +196,9 @@ Chat.prototype._sendMessage = function(text, cb) {
  */
 Chat.prototype._keyDown = function(event) {
   // Only accept these
-  var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
+  var isValidKey =
+    (event.keyCode === ENTER || event.keyCode === TAB)
+    && event.type === 'keydown';
   var isValidClick = event.type === 'click';
 
   // Ignore other events
@@ -211,6 +215,15 @@ Chat.prototype._keyDown = function(event) {
       return;
     }
   });
+};
+/**
+ * Handles clicks on the collapse button
+ * @private
+ */
+Chat.prototype._collapseClick = function() {
+  var userKey = this._userCache.getLocalUserKey();
+  this._view.toggleCollapse();
+  userKey.key(WIDGET_NAMESPACE).key('collapsed').set(this._view.collapsed);
 };
 
 /**
@@ -262,7 +275,7 @@ Chat.prototype.destroy = function(cb) {
   }
 
   if (this._isBound) {
-    this._binder.off(this._chatUI.collapseBtn, 'click', this._view.toggleCollapse);
+    this._binder.off(this._chatUI.collapseBtn, 'click', this._collapseClick);
     this._binder.off(this._chatUI.messageInput, 'keydown', this._keyDown);
     this._binder.off(this._chatUI.messageBtn, 'click', this._keyDown);
 
@@ -281,6 +294,9 @@ Chat.prototype.destroy = function(cb) {
  * @returns id A unique ID
  */
 function generateMessageId() {
-  var id = new Date().getTime() + '_' + Math.floor(Math.random() * 999999999 + 1);
+  var id =
+    new Date().getTime() +
+    '_' +
+    Math.floor(Math.random() * 999999999 + 1);
   return id;
 }
