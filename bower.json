@@ -1,0 +1,27 @@
+{
+  "name": "goinstant-chat",
+  "main": "dist/chat.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/goinstant/chat",
+  "authors": [
+    "GoInstant",
+    "a salesforce.com company"
+  ],
+
+  "description": "The Chat widget provides real-time messaging inside a room of your application.",
+  "keywords": [
+    "GoInstant",
+    "widget",
+    "chat"
+  ],
+
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
+
