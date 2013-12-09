@@ -10,11 +10,8 @@
  */
 
 /** Module dependencies */
-var classes = require('classes');
 var binder = require('binder');
-var async = require('async');
 var _ = require('lodash');
-var trim = require('trim');
 
 var UserCache = require('usercache');
 
@@ -177,7 +174,7 @@ Chat.prototype._sendMessage = function(text, cb) {
   this._messagesKey.key(message.id).set(
     message,
     opts,
-    function(err, value, context) {
+    function(err) {
     if (err) {
       return cb(err);
     }
@@ -196,9 +193,7 @@ Chat.prototype._sendMessage = function(text, cb) {
  */
 Chat.prototype._keyDown = function(event) {
   // Only accept these
-  var isValidKey =
-    (event.keyCode === ENTER || event.keyCode === TAB)
-    && event.type === 'keydown';
+  var isValidKey = (event.keyCode === ENTER || event.keyCode === TAB) && event.type === 'keydown';
   var isValidClick = event.type === 'click';
 
   // Ignore other events
@@ -236,7 +231,7 @@ Chat.prototype._getMessages = function(cb) {
 
   var self = this;
 
-  this._messagesKey.get(function(err, value, context) {
+  this._messagesKey.get(function(err, value) {
 
     if (err) {
       return cb(err);
