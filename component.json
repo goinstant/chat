@@ -15,27 +15,34 @@
     "moment/moment": "2.4.0",
     "goinstant/usercache": "v1.0.0",
     "goinstant/colors-common": "v1.0.0",
-    "goinstant/secure-filters": "v1.0.4"
+    "goinstant/widget-indicators": "v1.0.0"
   },
+
   "development": {
     "visionmedia/mocha": "*",
     "component/jquery": "*"
   },
+
   "license": "MIT",
+
   "main": "index.js",
+
   "scripts": [
     "index.js",
     "lib/errors.js",
     "lib/view.js",
     "vendor/xregexp/xregexp-all.js"
   ],
+
   "templates": [
     "templates/list-template.html",
     "templates/message-template.html"
   ],
+
   "styles": [
     "chat.css"
   ],
+
   "images": [
     "images/sprite.png",
     "images/sprite@2x.png",
