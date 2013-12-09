@@ -8,6 +8,7 @@ describe('View', function() {
   var async = require('async');
   var _ = require('lodash');
   var $ = require('jquery');
+  var moment = require('moment');
 
   var View = require('chat/lib/view');
 
@@ -53,7 +54,14 @@ describe('View', function() {
 
   fakeLocalUser = {
     id: 'local-1234',
-    displayName: 'Me'
+    displayName: 'Me',
+    goinstant: {
+      widgets: {
+        chat: {
+          collapsed: false
+        }
+      }
+    }
   };
 
   fakeLocalUser[colors.USER_PROPERTY] = palette.shift();
@@ -81,7 +89,7 @@ describe('View', function() {
 
   fakeDefaults = {
     room: null,
-    collapsed: false,
+    collapsed: null,
     position: 'right',
     container: null,
     truncateLength: 10,
@@ -89,10 +97,12 @@ describe('View', function() {
     messageExpiry: null
   };
 
-  describe('#initialize', function() {
+  describe('#initialize & #append', function() {
+
+    var spyCollapse;
     beforeEach(function() {
       testView = new View(mockUserCache, fakeDefaults);
-      testView.initialize();
+      spyCollapse = sinon.spy(testView, '_setCollapse');
     });
 
     afterEach(function() {
@@ -100,6 +110,9 @@ describe('View', function() {
     });
 
     it('appends the widget to the DOM', function() {
+      testView.initialize();
+      testView.append();
+
       var $chat = $('.gi-chat');
       var $collapseWrapper = $chat.children().eq(0);
       var $chatWrapper = $chat.children().eq(1);
@@ -107,6 +120,31 @@ describe('View', function() {
       assert.equal($chat.length, 1);
       assert.equal($collapseWrapper.length, 1);
       assert.equal($chatWrapper.length, 1);
+    });
+
+    it('appends with collapseStatus from userCache', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = true;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, true);
+    });
+
+    it('appends with collapseStatus from collapsed param', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = true;
+      testView.collapsed = false;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, false);
+    });
+
+    it('appends with collapseStatus false by default', function() {
+      fakeLocalUser.goinstant.widgets.chat.collapsed = null;
+      testView.initialize();
+
+      sinon.assert.calledOnce(spyCollapse);
+      sinon.assert.calledWith(spyCollapse, false);
     });
   });
 
@@ -130,7 +168,8 @@ describe('View', function() {
       var fakeMessage = {
         id: 123123123,
         text: 'this is only a test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
 
       var $el = $(testView._createMessage(fakeMessage));
@@ -139,6 +178,23 @@ describe('View', function() {
       assert.equal($el.attr('data-goinstant-id'), fakeMessage.id);
       assert.equal($el.find('.gi-name').html(), fakeMessage.user.displayName);
       assert.equal($el.find('.gi-text').html(), fakeMessage.text);
+
+      var formatted = $el.find('.gi-time').text().split(',')[0];
+      assert.isNull(formatted.match('-'));
+    });
+
+    it('creates a message with last week\'s time format', function() {
+      var fakeMessage = {
+        id: 123123123,
+        text: 'this is only a test',
+        user: fakeUsers[0],
+        timestamp: new Date().getTime() - (86400000 * 100)
+      };
+
+      var $el = $(testView._createMessage(fakeMessage));
+
+      var formatted = $el.find('.gi-time').text().split(',')[0];
+      assert.isNotNull(formatted.match('-'));
     });
 
     it('creates a message with links', function() {
@@ -148,7 +204,8 @@ describe('View', function() {
       var fakeMessage = {
         id: 123123123,
         text: 'this is www.google.ca only a http://goinstant.com test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
 
       var $el = $(testView._createMessage(fakeMessage));
@@ -173,13 +230,15 @@ describe('View', function() {
     beforeEach(function() {
       testView = new View(mockUserCache, fakeDefaults);
       testView.initialize();
+      testView.append();
 
       $messages = $('.gi-chat .gi-message-list');
 
       fakeMessage = {
         id: 123123123,
         text: 'this is only a test',
-        user: fakeUsers[0]
+        user: fakeUsers[0],
+        timestamp: new Date().getTime()
       };
     });
 

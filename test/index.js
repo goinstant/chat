@@ -32,7 +32,8 @@ describe('Chat Widget', function() {
   }
 
   fakeRoom = {
-    key: createFakeKey
+    key: createFakeKey,
+    self: createFakeKey
   };
 
   mockUserCache = {
@@ -49,6 +50,7 @@ describe('Chat Widget', function() {
 
   mockView = {
     initialize: sinon.stub(),
+    append: sinon.stub(),
     destroy: sinon.stub(),
     getUI: sinon.stub().returns(fakeUI),
     toggleCollapse: sinon.stub()
