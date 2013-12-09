@@ -27,7 +27,7 @@
     "index.js",
     "lib/errors.js",
     "lib/view.js",
-    "node_modules/xregexp/xregexp-all.js"
+    "vendor/xregexp/xregexp-all.js"
   ],
   "templates": [
     "templates/list-template.html",
