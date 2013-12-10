@@ -2,10 +2,11 @@
    GoInstant Userlist Widget Styles
    ========================================================================== */
 
-/* Change the box model */
+/* Change the box model and reset line height */
 .gi-chat * {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
+  line-height: 1;
 }
 
 /* Wrapper */
@@ -156,10 +157,11 @@
     /* Username */
     .gi-chat .gi-name {
       display: inline-block;
-      width: 180px;
-      margin-right: 20px;
+      width: 157px;
       padding: 0 10px 0 7px;
       overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
       line-height: 2;
       font-size: 12px;
       font-weight: 600;
@@ -168,9 +170,11 @@
 
     /* Time */
     .gi-chat .gi-time {
-      float: right;
-      padding: 0px 6px 6px 0px;
-      font-size: 10px;
+      position: absolute;
+      top: 13px;
+      right: 10px;
+      font-size: 9px;
+      color: #bbb;
     }
 
     /* Text */
@@ -183,14 +187,25 @@
       line-height: 1.25;
       font-size: 12px;
       word-wrap: break-word;
+      color: #444;
+    }
+
+    .gi-chat li a.gi-link {
+      text-decoration: underline;
+      color: #555;
+    }
+
+    .gi-chat li a.gi-link:hover {
+      text-decoration: underline;
+      color: #333;
     }
 
     .gi-chat .gi-images .gi-image {
-      max-height: 100%;
       max-width: 100%;
       height: auto;
-      width: auto;
-      margin-top: 10px;
+      margin-top: 8px;
+      border-radius: 2px;
+      box-shadow: 0 1px 1px rgba(0,0,0,.25);
     }
 
 
@@ -202,8 +217,7 @@
   padding: 6px;
   background: #e7e7e7;
   border-top: 1px solid #ccc;
-  border-radius: 3px 0 0 0;
-  box-shadow: 0 0 -2px rgba(0,0,0,.2);
+  border-radius: 0;
 }
 
   .gi-chat .gi-message-form input {
