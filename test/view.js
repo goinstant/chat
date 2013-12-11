@@ -301,7 +301,7 @@ describe('View', function() {
     });
 
     it('does not add image with invalid URL to DOM', function(done) {
-      this.timeout(6000);
+      this.timeout(11000); // Max time the view allows to load image
 
       var url = 'http://www.goinstant.com/blog';
 
@@ -314,7 +314,7 @@ describe('View', function() {
     });
 
     it('adds image with valid URL to DOM', function(done) {
-      this.timeout(6000);
+      this.timeout(11000); // Max time the view allows to load image
 
       var url = 'https://pbs.twimg.com/profile_images/1539812195/400x400-' +
                     'GoInstant_bigger.png';
