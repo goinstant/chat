@@ -12519,7 +12519,7 @@ View.prototype._renderText = function(textEl, text) {
     }
 
     // Make URL absolute
-    if (node.substring(0, 4) !== 'http') {
+    if (node.substring(0, 4).toLowerCase() !== 'http') {
       node = 'http://' + node;
     }
 
@@ -12569,6 +12569,8 @@ View.prototype._validateImage = function(imageEl, url, cb) {
     return cb(null);
   }
 
+  var validated = false;
+
   var img = new Image();
   classes(img).add(IMAGE_CLASS);
 
@@ -12576,38 +12578,36 @@ View.prototype._validateImage = function(imageEl, url, cb) {
   // Fixes an issue in IE9 where onload wouldn't trigger
   imageEl.appendChild(img);
 
-  // Timeout attempt to load image
-  var timeoutId = window.setTimeout(function() {
-    window.clearTimeout(timeoutId);
-    if (img.parentNode) {
-      img.parentNode.removeChild(img);
+  // Timeout after 10 seconds attempting to load image
+  var timeoutId = window.setTimeout(clearImg, 10000);
+
+  img.onerror = clearImg;
+
+  img.onabort = clearImg;
+
+  function clearImg() {
+    if (validated) {
+      return;
     }
 
-    return cb(null);
-  }, 5000);
+    validated = true;
 
-  img.onerror = function() {
     window.clearTimeout(timeoutId);
-
-    if (img.parentNode) {
-      img.parentNode.removeChild(img);
-    }
+    img.parentNode.removeChild(img);
 
     return cb(null);
-  };
-
-  img.onabort = function() {
-    window.clearTimeout(timeoutId);
-
-    if (img.parentNode) {
-      img.parentNode.removeChild(img);
-    }
-
-    return cb(null);
-  };
+  }
 
   img.onload = function() {
+    if (validated) {
+      // Timeout would have occurred, took too long to load image
+      return;
+    }
+
+    validated = true;
+
     window.clearTimeout(timeoutId);
+
     return cb(null);
   };
 
@@ -12616,13 +12616,7 @@ View.prototype._validateImage = function(imageEl, url, cb) {
     img.src = url;
 
   } catch (err) {
-    window.clearTimeout(timeoutId);
-
-    if (img.parentNode) {
-      img.parentNode.removeChild(img);
-    }
-
-    return(null);
+    clearImg();
   }
 };
 
