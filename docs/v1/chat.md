@@ -1,5 +1,7 @@
 # Chat
 
+[Github Link](html/chat_github.html "include")
+
 The Chat widget provides real-time messaging inside
 a room of your application.
 
