@@ -12348,6 +12348,8 @@ View.prototype.append = function() {
 
     classes(this._wrapper).add(ANCHOR_CLASS);
   }
+
+  this._scrollChatToBottom();
 };
 
 /**

@@ -1,7 +1,7 @@
 {
   "name": "goinstant-chat",
   "main": "dist/chat.js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "homepage": "https://github.com/goinstant/chat",
   "authors": [
     "GoInstant",

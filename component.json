@@ -2,7 +2,7 @@
   "name": "chat",
   "repo": "goinstant/chat",
   "description": "The GoInstant Chat widget provides real-time chat to users inside a room of your application.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "keywords": [],
   "dependencies": {
     "lodash/lodash": "2.3.0",
