@@ -7172,7 +7172,6 @@ var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
 
 exports.bind = function(el, type, fn, capture){
   el[bind](prefix + type, fn, capture || false);
-
   return fn;
 };
 
@@ -7189,7 +7188,6 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   el[unbind](prefix + type, fn, capture || false);
-
   return fn;
 };
 });
@@ -11877,15 +11875,13 @@ var errors = require('./lib/errors');
 /**
  * @const
  */
-var WIDGET_NAMESPACE = 'goinstant/widgets/chat';
-
 var ENTER = 13;
 var TAB = 9;
 
 var MESSAGE_KEY_REGEX = /^\/goinstant\/widgets\/chat\/messages\/\d+_\d+$/;
 
 var VALID_OPTIONS = ['room', 'collapsed', 'position', 'container',
-                     'truncateLength', 'avatars', 'messageExpiry'];
+                     'truncateLength', 'avatars', 'messageExpiry', 'namespace'];
 
 var VALID_POSITIONS = ['left', 'right'];
 
@@ -11898,7 +11894,8 @@ var defaultOpts = {
   container: null,
   truncateLength: 20,
   avatars: true,
-  messageExpiry: null
+  messageExpiry: null,
+  namespace: 'goinstant/widgets/chat'
 };
 
 module.exports = Chat;
@@ -11938,11 +11935,15 @@ module.exports = Chat;
   if (opts.messageExpiry && !_.isNumber(opts.messageExpiry)) {
     throw errors.create('Chat', 'INVALID_MESSAGEEXPIRY');
   }
+  if (opts.namespace && !_.isString(opts.namespace)) {
+    throw errors.create('Chat', 'INVALID_NAMESPACE');
+  }
 
   var validOpts = _.defaults(opts, defaultOpts);
 
   this._room = validOpts.room;
   this._messageExpiry = validOpts.messageExpiry;
+  this._namespace = validOpts.namespace;
 
   this._chatUI = null;
   this._isBound = false;
@@ -11972,7 +11973,7 @@ Chat.prototype.initialize = function(cb) {
     throw errors.create('initialize', 'INVALID_CALLBACK');
   }
 
-  this._messagesKey = this._room.key(WIDGET_NAMESPACE).key('messages');
+  this._messagesKey = this._room.key(this._namespace).key('messages');
 
   var self = this;
 
@@ -12085,7 +12086,7 @@ Chat.prototype._keyDown = function(event) {
 Chat.prototype._collapseClick = function() {
   var userKey = this._userCache.getLocalUserKey();
   this._view.toggleCollapse();
-  userKey.key(WIDGET_NAMESPACE).key('collapsed').set(this._view.collapsed);
+  userKey.key(this._namespace).key('collapsed').set(this._view.collapsed);
 };
 
 /**
@@ -12191,7 +12192,8 @@ var errorMap = {
 
   INVALID_LISTENER: ': Listener was not found or invalid',
   INVALID_EVENT: ': Event was not found or invalid',
-  INVALID_MESSAGEEXPIRY: ': messageExpiry can only be a number'
+  INVALID_MESSAGEEXPIRY: ': messageExpiry can only be a number',
+  INVALID_NAMESPACE: 'namespace must be a string'
 };
 
 errors.create = function(method, type) {
